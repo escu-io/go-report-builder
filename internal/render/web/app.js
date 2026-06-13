@@ -434,6 +434,20 @@
   const TM_LABEL_H = 24;
   const TM_GLYPH_MIN = 15;      // min cell size to show a "click to open" glyph
 
+  // ---- Squarified weighting (log-scaled) ----
+  // Codebases have extreme size variance (a core package may have tens of
+  // thousands of statements while a sibling has ten), so sizing tiles by raw
+  // counts makes the small ones vanish into slivers. Instead each tile's
+  // *visual weight* is log-scaled and blends coverable statements (S) with the
+  // file count (N):
+  //     W = α·log10(S + 1) + β·log10(N + 1)
+  // The `+ 1` avoids log10(0). Tiles are then sized in proportion to their
+  // share of the total weight, and the long tail past TM_MAX_ITEMS is folded
+  // into one synthetic "Others" tile so a level never dissolves into clutter.
+  const TM_W_ALPHA = 0.8;       // weight given to statement count (size)
+  const TM_W_BETA = 0.2;        // weight given to file count
+  const TM_MAX_ITEMS = 20;      // max tiles per level before aggregating "Others"
+
   // Files are drawn as small rectangles sized to just fit their (truncated)
   // file name plus a file icon — not by statement count. Packages keep their
   // area encoding; files are uniform little chips so they read as "leaves".
@@ -571,7 +585,8 @@
   }
   function tmTitle(el, n) {
     const t = document.createElementNS(SVGNS, 'title');
-    t.textContent = `${n.name} — ${formatPct(n.percent)} (${n.covered}/${n.total})`;
+    const lead = n.others ? `Others — ${n._count} smaller items folded together` : n.name;
+    t.textContent = `${lead} — ${formatPct(n.percent)} (${n.covered}/${n.total})`;
     el.appendChild(t);
   }
   // Return a <g> clipped to the given rect, appended to `parent`. Anything drawn
@@ -611,7 +626,7 @@
     const cw = Math.max(0, w - TM_GAP), ch = Math.max(0, h - TM_GAP);
     const isPkg = n.isDir && (n.children || []).some(c => c.total > 0);
     const g = document.createElementNS(SVGNS, 'g');
-    const rect = tmRect(x, y, cw, ch, 'treemap-cell' + (n.isDir ? ' is-dir' : ''));
+    const rect = tmRect(x, y, cw, ch, 'treemap-cell' + (n.isDir ? ' is-dir' : '') + (n.others ? ' treemap-others' : ''));
     rect.setAttribute('fill', tmColor(n.percent));
     rect.setAttribute('stroke', tmStrong(n.percent));
     tmTitle(rect, n);
@@ -758,7 +773,7 @@
     const clickable = depth > 0;
     const g = document.createElementNS(SVGNS, 'g');
 
-    const bg = tmRect(x, y, cw, ch, 'treemap-container' + (clickable ? ' tm-clickable' : ''));
+    const bg = tmRect(x, y, cw, ch, 'treemap-container' + (clickable ? ' tm-clickable' : '') + (n.others ? ' treemap-others' : ''));
     bg.setAttribute('fill', tmColor(n.percent));
     bg.setAttribute('stroke', tmStrong(n.percent));
     tmTitle(bg, n);
@@ -808,7 +823,7 @@
       tmDrawFileFlow(body, files, bx, by, bw, bh, onMore);
     } else if (!files.length) {
       // Only sub-packages: squarify them across the whole body.
-      tmLayoutNodes(body, dirs, bx, by, bw, bh, depth + 1);
+      tmLayoutNodes(body, dirs, bx, by, bw, bh, depth + 1, n.path);
     } else {
       // Both: sub-packages fill the body, files sit in a strip at the bottom.
       const rows = packChips(files, bw);
@@ -817,23 +832,74 @@
       stripH = Math.min(stripH, Math.max(0, bh * 0.5));
       const dirH = bh - stripH - FILE_CHIP_GAP;
       if (dirH >= TM_MIN_NEST_H * 0.5 && stripH >= FILE_CHIP_H) {
-        tmLayoutNodes(body, dirs, bx, by, bw, dirH, depth + 1);
+        tmLayoutNodes(body, dirs, bx, by, bw, dirH, depth + 1, n.path);
         tmDrawFileFlow(body, files, bx, by + dirH + FILE_CHIP_GAP, bw, stripH, onMore);
       } else {
         // Too cramped to split: give the whole body to the sub-packages.
-        tmLayoutNodes(body, dirs, bx, by, bw, bh, depth + 1);
+        tmLayoutNodes(body, dirs, bx, by, bw, bh, depth + 1, n.path);
       }
     }
   }
 
+  // Number of files a node represents: a leaf is one file, a package is its
+  // count of coverable leaves (or an explicit override for synthetic nodes).
+  function tmFileCount(n) {
+    if (typeof n._files === 'number') return n._files;
+    return n.isDir ? tmCountLeaves(n) : 1;
+  }
+
+  // Log-scaled visual weight  W = α·log10(S + 1) + β·log10(N + 1)  where S is
+  // coverable statements and N is the file count. This compresses the codebase's
+  // huge size variance so small packages stay legible next to large ones.
+  function tmWeight(n) {
+    const s = Math.max(0, n.total || 0);
+    const nf = Math.max(0, tmFileCount(n));
+    return TM_W_ALPHA * Math.log10(s + 1) + TM_W_BETA * Math.log10(nf + 1);
+  }
+
+  // Fold a list of small items into one synthetic "Others" package. Its raw
+  // statements/files are the combined sums of its members, so its own weight is
+  // computed exactly like a normal folder. It keeps the real members as children
+  // so clicking it drills in to reveal them.
+  function tmMakeOthers(rest, parentPath) {
+    let total = 0, covered = 0, files = 0;
+    rest.forEach(c => { total += c.total || 0; covered += c.covered || 0; files += tmFileCount(c); });
+    const node = {
+      isDir: true,
+      others: true,
+      name: 'Others',
+      path: (parentPath || '') + '/\u2039others\u203a',
+      children: rest,
+      total, covered,
+      percent: total > 0 ? (covered / total) * 100 : 0,
+      _files: files,
+      _count: rest.length,
+    };
+    node.orig = node;
+    return node;
+  }
+
   // Squarify a list of (coverable) nodes inside the given rect and draw each.
-  function tmLayoutNodes(svg, nodes, x, y, w, h, depth) {
+  // Tiles are ranked by log-scaled weight; everything past TM_MAX_ITEMS is
+  // aggregated into a single "Others" tile, and each tile's area is made
+  // proportional to its share of the total weight (A_i = A_total · W_i / ΣW_j).
+  function tmLayoutNodes(svg, nodes, x, y, w, h, depth, parentPath) {
     if (w <= 2 || h <= 2) return;
-    const items = nodes
-      .filter(c => c.total > 0)
-      .map(c => ({ node: tmCollapse(c), value: c.total }))
+    let coverable = nodes.filter(c => c.total > 0);
+    if (!coverable.length) return;
+
+    coverable = coverable.slice().sort((a, b) => tmWeight(b) - tmWeight(a));
+    let display = coverable;
+    if (coverable.length > TM_MAX_ITEMS) {
+      // Keep the top (K-1) heaviest items and reserve the last slot for "Others".
+      const top = coverable.slice(0, TM_MAX_ITEMS - 1);
+      const others = tmMakeOthers(coverable.slice(TM_MAX_ITEMS - 1), parentPath);
+      display = top.concat(others);
+    }
+
+    const items = display
+      .map(c => ({ node: c.others ? c : tmCollapse(c), value: tmWeight(c) }))
       .sort((a, b) => b.value - a.value);
-    if (!items.length) return;
     const rects = layoutTreemap(items, x, y, w, h, w >= h);
     rects.forEach(r => tmDrawNode(svg, r.node, r.x, r.y, r.w, r.h, depth));
   }

@@ -306,6 +306,7 @@ main { padding: 0.85rem var(--pad-x) 1.5rem; flex: 1; }
 .treemap-container { stroke-width: 2px; transition: filter 0.15s, stroke 0.15s; }
 .treemap-container.tm-clickable { cursor: pointer; }
 .treemap-container.tm-clickable:hover { filter: brightness(1.08); stroke: var(--accent); stroke-width: 2.75px; }
+.treemap-others { stroke-dasharray: 3 3; opacity: 0.85; }
 .treemap-more { fill: var(--surface-2); stroke: var(--border-strong); stroke-width: 1.5px; cursor: pointer; transition: filter 0.15s; }
 .treemap-more:hover { filter: brightness(1.12); }
 .treemap-more-label { pointer-events: none; font-size: 13px; font-weight: 700; fill: var(--muted); text-anchor: middle; dominant-baseline: central; }
