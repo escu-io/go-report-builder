@@ -1,0 +1,16 @@
+# Coverage profiles and generated reports
+*.out
+/coverage-report.html
+
+# Built CLI binary
+/go-report-builder
+
+# Go build / test artifacts
+*.test
+*.exe
+/dist/
+
+# Editor / OS cruft
+.DS_Store
+.idea/
+.vscode/
