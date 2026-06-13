@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-06-13
+
+### Fixed
+
+- Treemap view layout: corrected tile sizing and positioning so the zoomable
+  treemap renders correctly.
+
+## [0.1.0] - 2026-06-13
+
 ### Added
 
 - Public `covhtml` library API (`Generate`, `Options`, `ProfileInput`) with
@@ -21,4 +30,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `-tags` flag to pass build tags honored during discovery (config: `buildTags`).
 - MIT license, contribution guide, Makefile, and CI workflow.
 
-[Unreleased]: https://github.com/escu-io/go-report-builder/commits/main
+[Unreleased]: https://github.com/escu-io/go-report-builder/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/escu-io/go-report-builder/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/escu-io/go-report-builder/releases/tag/v0.1.0
