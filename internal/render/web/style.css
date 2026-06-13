@@ -1,20 +1,29 @@
 :root {
-  --bg: #0b1120;
-  --bg-grad: radial-gradient(1200px 600px at 80% -10%, rgba(56,189,248,0.10), transparent 60%),
-             radial-gradient(900px 500px at 0% 0%, rgba(168,85,247,0.08), transparent 55%);
-  --surface: #111a2e;
-  --surface-2: #16203a;
-  --elevated: #1b2742;
-  --text: #e8edf7;
-  --muted: #93a1bd;
-  --faint: #64748b;
-  --border: #243049;
-  --border-strong: #33425f;
-  --accent: #38bdf8;
-  --accent-soft: rgba(56,189,248,0.14);
-  --line-num: #5b6b88;
-  --shadow: 0 12px 40px -12px rgba(0,0,0,0.6);
+  /* Identity: "Go-native teal + frosted glass". The base ink leans subtly
+     teal, the accent is the Go gopher teal (#00ADD8), and surfaces share the
+     treemap's frosted-glass language (translucency + blur + a 1px inset top
+     edge-light, see --edge-light). */
+  --bg: #0a1416;
+  --bg-grad: radial-gradient(1200px 600px at 80% -10%, rgba(0,173,216,0.13), transparent 60%),
+             radial-gradient(900px 520px at 0% 0%, rgba(0,117,141,0.10), transparent 55%);
+  --surface: #0f1d20;
+  --surface-2: #13262a;
+  --elevated: #183033;
+  --text: #e6f0ef;
+  --muted: #8aa3a5;
+  --faint: #5d7679;
+  --border: #1f3a3d;
+  --border-strong: #2d5256;
+  --accent: #00ADD8;
+  --accent-soft: rgba(0,173,216,0.15);
+  --spark: #CE3262;
+  --line-num: #4f6b6e;
+  --shadow: 0 12px 40px -12px rgba(0,0,0,0.62);
   --shadow-sm: 0 4px 16px -6px rgba(0,0,0,0.5);
+  /* Frosted-glass "tell": a hairline highlight on the top edge of every panel,
+     as if light is catching the lip of a sheet of glass. */
+  --edge-light: inset 0 1px 0 rgba(255,255,255,0.06);
+  --glass-blur: blur(14px);
   --radius: 14px;
   --radius-sm: 9px;
   --cov: #22c55e;
@@ -22,6 +31,16 @@
   --unc: #ef4444;
   --tm-border: rgba(11,17,32,0.85);
   --tm-border-dir: rgba(11,17,32,0.95);
+  /* Treemap "tinted glass": fills are translucent so coverage colors read as
+     tinted panes over the dark surface. The outer container layer is the most
+     transparent, so nesting reads as stacked sheets of glass; leaf cells and
+     file chips sit a bit more opaque so their tint stays legible. */
+  --tm-fill: 0.66;
+  --tm-fill-container: 0.42;
+  /* Warm pale-yellow middle of the treemap's tinted-glass ramp (mirrors TM_MID
+     in app.js); used by the legend so its scale matches the treemap. The 50%
+     tint leans yellow rather than cool white. */
+  --tm-mid: #f7f2d4;
   /* Live layout metrics (kept in sync from JS) drive the sticky stack so the
      toolbar and sidebar always sit flush under the header regardless of how
      much the header wraps or how large the fluid fonts get. */
@@ -40,24 +59,31 @@ html {
 }
 
 body.theme-light {
-  --bg: #eef2f9;
-  --bg-grad: radial-gradient(1200px 600px at 80% -10%, rgba(56,189,248,0.18), transparent 60%),
-             radial-gradient(900px 500px at 0% 0%, rgba(168,85,247,0.12), transparent 55%);
-  --surface: #ffffff;
-  --surface-2: #f5f8fd;
-  --elevated: #ffffff;
-  --text: #0f172a;
-  --muted: #5a6b87;
-  --faint: #8a99b5;
-  --border: #e2e8f3;
-  --border-strong: #cdd7e8;
-  --accent: #0284c7;
-  --accent-soft: rgba(2,132,199,0.10);
-  --line-num: #aab6cc;
-  --shadow: 0 16px 40px -18px rgba(15,23,42,0.35);
-  --shadow-sm: 0 6px 18px -10px rgba(15,23,42,0.25);
+  /* Frosted "paper": a cool, faintly teal off-white rather than pure white, so
+     the glass language still reads in daylight. */
+  --bg: #e7eeef;
+  --bg-grad: radial-gradient(1200px 600px at 80% -10%, rgba(0,173,216,0.16), transparent 60%),
+             radial-gradient(900px 520px at 0% 0%, rgba(0,117,141,0.10), transparent 55%);
+  --surface: #f4f8f8;
+  --surface-2: #e8f0f0;
+  --elevated: #fbfdfd;
+  --text: #0b1f22;
+  --muted: #4c6669;
+  --faint: #7c9598;
+  --border: #d3e0e0;
+  --border-strong: #b7cbcc;
+  --accent: #0091b5;
+  --accent-soft: rgba(0,145,181,0.12);
+  --spark: #b82a55;
+  --line-num: #9ab0b2;
+  --shadow: 0 16px 40px -18px rgba(11,31,34,0.30);
+  --shadow-sm: 0 6px 18px -10px rgba(11,31,34,0.22);
+  --edge-light: inset 0 1px 0 rgba(255,255,255,0.7);
   --tm-border: rgba(255,255,255,0.92);
   --tm-border-dir: #ffffff;
+  --tm-fill: 0.74;
+  --tm-fill-container: 0.5;
+  --tm-mid: #ebe5c6;
 }
 
 * { box-sizing: border-box; }
@@ -74,6 +100,7 @@ body {
   flex-direction: column;
   -webkit-font-smoothing: antialiased;
   font-feature-settings: "cv02","cv03","cv04";
+  font-variant-numeric: tabular-nums;
 }
 button { font-family: inherit; }
 ::selection { background: var(--accent-soft); }
@@ -97,8 +124,8 @@ button { font-family: inherit; }
   display: grid; place-items: center;
   border-radius: 12px;
   color: #fff;
-  background: linear-gradient(135deg, #38bdf8, #818cf8 55%, #a855f7);
-  box-shadow: 0 8px 20px -8px rgba(56,189,248,0.7);
+  background: linear-gradient(135deg, #00ADD8, #00758D);
+  box-shadow: 0 8px 20px -8px rgba(0,173,216,0.7);
 }
 .brand-text { min-width: 0; }
 h1 { margin: 0; font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; }
@@ -116,17 +143,19 @@ h1 { margin: 0; font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; }
   stroke-dasharray: 97.4; stroke-dashoffset: 97.4; transition: stroke-dashoffset 0.7s cubic-bezier(.4,0,.2,1), stroke 0.4s; }
 .gauge-pct { position: absolute; font-size: 0.72rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 .headline-meta { display: flex; flex-direction: column; }
-.headline-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); }
+.headline-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .meta { color: var(--muted); font-size: 0.82rem; font-variant-numeric: tabular-nums; }
 
 .icon-btn {
   display: grid; place-items: center;
   width: 38px; height: 38px;
   border-radius: 10px;
-  background: var(--surface-2);
+  background: color-mix(in srgb, var(--surface-2) 78%, transparent);
+  backdrop-filter: var(--glass-blur);
   color: var(--text);
   border: 1px solid var(--border);
   cursor: pointer;
+  box-shadow: var(--edge-light);
   transition: background 0.18s, border-color 0.18s, transform 0.1s;
 }
 .icon-btn:hover { border-color: var(--border-strong); background: var(--elevated); }
@@ -156,10 +185,11 @@ body.theme-light .icon-moon { display: block; }
   display: inline-flex;
   padding: 4px;
   gap: 2px;
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border);
   border-radius: 12px;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-sm), var(--edge-light);
 }
 .seg-indicator {
   position: absolute;
@@ -205,12 +235,14 @@ body.theme-light .icon-moon { display: block; }
 #search-input {
   width: 100%;
   padding: 0.6rem 3.4rem 0.6rem 2.3rem;
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border);
   border-radius: 11px;
   color: var(--text);
   font-size: 0.88rem;
   outline: none;
+  box-shadow: var(--edge-light);
   transition: border-color 0.18s, box-shadow 0.18s;
 }
 #search-input::placeholder { color: var(--faint); }
@@ -223,11 +255,14 @@ body.theme-light .icon-moon { display: block; }
   border-radius: 6px; color: var(--muted); cursor: pointer;
   transition: color 0.15s, border-color 0.15s;
 }
+.search-clear[hidden] { display: none; }
+.search-clear svg { display: block; }
 .search-clear:hover { color: var(--text); border-color: var(--border-strong); }
 .search-hint {
   position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
-  font-size: 0.72rem; color: var(--faint);
-  background: var(--surface-2); border: 1px solid var(--border);
+  font-size: 0.72rem; color: var(--spark);
+  background: color-mix(in srgb, var(--spark) 12%, var(--surface-2));
+  border: 1px solid color-mix(in srgb, var(--spark) 45%, transparent);
   border-radius: 6px; padding: 1px 6px; font-family: ui-monospace, monospace;
 }
 /* Run filter dropdown */
@@ -235,12 +270,14 @@ body.theme-light .icon-moon { display: block; }
 .run-trigger {
   display: inline-flex; align-items: center; gap: 0.45rem;
   padding: 0.55rem 0.8rem;
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 78%, transparent);
+  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border);
   border-radius: 11px;
   color: var(--text);
   font-size: 0.84rem; font-weight: 600;
   cursor: pointer;
+  box-shadow: var(--edge-light);
   transition: border-color 0.18s, background 0.18s;
 }
 .run-trigger:hover { border-color: var(--border-strong); }
@@ -288,7 +325,9 @@ main { padding: 0.85rem var(--pad-x) 1.5rem; flex: 1; }
 .breadcrumb .crumb-current { color: var(--text); font-weight: 600; padding: 0.2rem 0.4rem; }
 .breadcrumb .sep { color: var(--faint); }
 
-/* Treemap */
+/* Treemap — corner radii are applied in JS from --radius (packages/containers)
+   and --radius-sm (file chips), capped to half the box size so nested tiles
+   stay proportional to the rest of the app's 14px / 9px rounding. */
 #view-treemap svg {
   width: 100%;
   height: clamp(360px, calc(100vh - var(--stack-h) - var(--footer-h) - 5rem), 1100px);
@@ -298,12 +337,12 @@ main { padding: 0.85rem var(--pad-x) 1.5rem; flex: 1; }
   box-shadow: var(--shadow-sm);
   display: block;
 }
-.treemap-cell { stroke-width: 2px; cursor: pointer; transition: filter 0.15s; }
+.treemap-cell { stroke-width: 2px; fill-opacity: var(--tm-fill); cursor: pointer; transition: filter 0.15s; }
 .treemap-cell:hover { filter: brightness(1.14); }
 .treemap-cell.is-dir { stroke-width: 2px; stroke-dasharray: 5 3; }
-.treemap-file { stroke-width: 1.5px; cursor: pointer; transition: filter 0.15s; }
+.treemap-file { stroke-width: 1.5px; fill-opacity: var(--tm-fill); cursor: pointer; transition: filter 0.15s; }
 .treemap-file:hover { filter: brightness(1.16); }
-.treemap-container { stroke-width: 2px; transition: filter 0.15s, stroke 0.15s; }
+.treemap-container { stroke-width: 2px; fill-opacity: var(--tm-fill-container); transition: filter 0.15s, stroke 0.15s; }
 .treemap-container.tm-clickable { cursor: pointer; }
 .treemap-container.tm-clickable:hover { filter: brightness(1.08); stroke: var(--accent); stroke-width: 2.75px; }
 .treemap-others { stroke-dasharray: 3 3; opacity: 0.85; }
@@ -327,13 +366,15 @@ main { padding: 0.85rem var(--pad-x) 1.5rem; flex: 1; }
 }
 .explorer-sidebar {
   flex: 0 0 clamp(240px, 26vw, 340px);
+  container: sidebar / inline-size;
   display: flex;
   flex-direction: column;
   min-width: 0;
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-sm), var(--edge-light);
   max-height: calc(100vh - var(--stack-h) - var(--footer-h) - 1.5rem);
   position: sticky;
   top: calc(var(--stack-h) + 0.85rem);
@@ -344,7 +385,7 @@ main { padding: 0.85rem var(--pad-x) 1.5rem; flex: 1; }
   padding: 0.5rem 0.6rem;
   border-bottom: 1px solid var(--border);
 }
-.explorer-sidebar-title { flex: 1; min-width: 0; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.explorer-sidebar-title { flex: 1; min-width: 0; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--faint); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tree-scroll { overflow: auto; padding: 0.4rem; flex: 1; }
 .tree-empty { padding: 1.5rem 1rem; text-align: center; color: var(--muted); font-size: 0.85rem; }
 
@@ -380,10 +421,18 @@ main { padding: 0.85rem var(--pad-x) 1.5rem; flex: 1; }
 
 .tree-actions { display: flex; gap: 0.4rem; }
 .tree-actions button {
+  display: inline-flex; align-items: center; gap: 0.3rem;
   background: var(--surface-2); border: 1px solid var(--border); color: var(--muted);
   font-size: 0.72rem; font-weight: 600; padding: 0.25rem 0.5rem; border-radius: 7px; cursor: pointer;
 }
+.tree-actions button svg { display: block; flex: none; }
 .tree-actions button:hover { color: var(--text); border-color: var(--border-strong); }
+/* When the sidebar is narrow, drop the text labels so the "Files" title keeps
+   its room and the actions collapse to compact icon buttons. */
+@container sidebar (max-width: 360px) {
+  .tree-actions button { padding: 0.3rem; }
+  .tree-actions .ta-label { display: none; }
+}
 .tree-list { list-style: none; margin: 0; padding: 0; }
 .tree-list .tree-list { margin-left: 0; }
 .tree-scroll > .tree-list { width: max-content; min-width: 100%; }
@@ -428,39 +477,73 @@ main { padding: 0.85rem var(--pad-x) 1.5rem; flex: 1; }
 
 /* File detail */
 .file-head {
-  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
-  margin-bottom: 0.85rem; flex-wrap: wrap;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 0.85rem;
+  flex-wrap: wrap;
 }
-.file-title { min-width: 0; }
-.file-name { display: block; font-size: 1rem; font-weight: 700; }
+.file-title { flex: 1 1 12rem; min-width: 0; }
+.file-name {
+  display: block; font-size: 1rem; font-weight: 700;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .file-path {
   display: block; font-size: 0.78rem; color: var(--faint);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.file-stats { display: flex; align-items: center; gap: 1rem; }
-.file-pct { font-size: 1.35rem; font-weight: 800; font-variant-numeric: tabular-nums; }
-.run-badges { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.file-stats {
+  flex: 0 1 auto;
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+.file-pct {
+  flex: none;
+  font-size: 1.35rem; font-weight: 800; font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.run-badges { display: flex; gap: 0.4rem; flex-wrap: wrap; justify-content: flex-end; }
 .badge {
   display: inline-flex; align-items: center; gap: 0.3rem;
   font-size: 0.74rem; font-weight: 600;
   padding: 0.25rem 0.55rem; border-radius: 999px;
   background: var(--surface-2); border: 1px solid var(--border); color: var(--muted);
+  box-shadow: var(--edge-light);
 }
 .badge.hit { color: var(--cov); border-color: color-mix(in srgb, var(--cov) 40%, transparent); }
 .badge.dim { opacity: 0.4; }
 
 #source-view {
   margin: 0;
-  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: var(--glass-blur);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-sm), var(--edge-light);
   padding: 0.6rem 0;
   overflow: auto;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: clamp(11.5px, 10.5px + 0.2vw, 14.5px);
   line-height: 1.55;
   max-height: calc(100vh - var(--stack-h) - var(--footer-h) - 5.5rem);
+}
+#source-view.is-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  min-height: clamp(180px, calc(100vh - var(--stack-h) - var(--footer-h) - 9rem), 420px);
+}
+#source-view.is-empty code {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: inherit;
 }
 .source-line { display: flex; }
 .source-line:hover { background: color-mix(in srgb, var(--accent) 7%, transparent); }
@@ -477,7 +560,31 @@ main { padding: 0.85rem var(--pad-x) 1.5rem; flex: 1; }
 .line-covered { background: color-mix(in srgb, var(--cov) 9%, transparent); }
 .line-partial { background: color-mix(in srgb, var(--part) 9%, transparent); }
 .line-uncovered { background: color-mix(in srgb, var(--unc) 9%, transparent); }
-.source-empty { padding: 2rem; text-align: center; color: var(--muted); }
+.source-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: var(--muted);
+  width: 100%;
+}
+.source-empty-icon { color: var(--faint); opacity: 0.85; margin-bottom: 0.15rem; }
+.source-empty-title {
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.source-empty-hint {
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.82rem;
+  color: var(--faint);
+  max-width: 34ch;
+  line-height: 1.5;
+}
 
 /* syntax */
 .kw { color: #c678dd; }
@@ -508,16 +615,9 @@ body.theme-light .op { color: #475569; }
 .legend-label { font-weight: 600; color: var(--text); }
 .legend-bar {
   width: 180px; height: 9px; border-radius: 999px;
-  background: linear-gradient(90deg, #A9001A 0%, #E67E22 30%, #FFF9A6 55%, #A8E092 65%, #34A853 80%, #0B6A3A 100%);
+  background: linear-gradient(90deg, var(--unc) 0%, var(--tm-mid) 50%, var(--cov) 100%);
 }
 .legend-end { color: var(--faint); font-variant-numeric: tabular-nums; }
-.legend-sep { width: 1px; height: 18px; background: var(--border); margin: 0 0.4rem; }
-.legend-chip { display: inline-flex; align-items: center; gap: 0.4rem; }
-.dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
-.dot-covered { background: var(--cov); }
-.dot-partial { background: var(--part); }
-.dot-uncovered { background: var(--unc); }
-.dot-not-tracked { background: var(--border-strong); }
 
 /* ---------- Responsive: large / ultra-wide screens ---------- */
 @media (min-width: 1700px) {
@@ -546,6 +646,11 @@ body.theme-light .op { color: #475569; }
   /* Let search take a full row under the controls. */
   .toolbar { gap: 0.6rem 0.7rem; }
   .search-box { order: 3; flex: 1 1 100%; max-width: none; }
+  .file-stats {
+    flex: 1 1 100%;
+    margin-left: 0;
+    justify-content: flex-start;
+  }
 }
 
 /* ---------- Responsive: phones ---------- */
@@ -561,12 +666,9 @@ body.theme-light .op { color: #475569; }
   .run-trigger { padding: 0.5rem 0.6rem; }
   .legend { gap: 0.45rem 0.55rem; }
   .legend-bar { width: 120px; }
-  .legend-sep { display: none; }
 }
 
 @media (max-width: 380px) {
-  /* Reclaim space: drop the gradient legend bar, keep the swatches. */
-  .legend-label, .legend-bar, .legend-end { display: none; }
   .seg svg { display: none; }
 }
 

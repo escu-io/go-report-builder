@@ -42,4 +42,21 @@ jobs:
         run: go test -race -coverprofile=cover.out ./...
 
       - name: Build CLI
-        run: go build ./...
+        run: go build -o go-report-builder ./cmd/go-report-builder
+
+      - name: Generate coverage report (dogfood)
+        run: ./go-report-builder -o coverage-report.html cover.out
+
+      - name: Upload coverage report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage-report.html
+          retention-days: 14
+
+      - name: Upload coverage profile
+        uses: actions/upload-artifact@v4
+        with:
+          name: cover-profile
+          path: cover.out
+          retention-days: 14

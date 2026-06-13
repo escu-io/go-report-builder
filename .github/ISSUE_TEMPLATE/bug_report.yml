@@ -1,0 +1,59 @@
+name: Bug report
+description: Report something that isn't working as expected
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Include steps to reproduce when possible.
+
+  - type: input
+    id: version
+    attributes:
+      label: go-report-builder version
+      description: Output of `go-report-builder -version` or the git tag / `go install` version
+      placeholder: v0.1.2
+    validations:
+      required: true
+
+  - type: input
+    id: go-version
+    attributes:
+      label: Go version
+      description: Output of `go version`
+      placeholder: go1.25.0 darwin/arm64
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Commands, config file, and inputs that trigger the issue
+      placeholder: |
+        go test -coverprofile=cover.out ./...
+        go-report-builder -o report.html cover.out
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Screenshots, sample cover.out snippets, browser, OS, etc.

@@ -10,6 +10,9 @@ import (
 	"github.com/escu-io/go-report-builder/internal/config"
 )
 
+// version is set at build time via -ldflags (see .goreleaser.yaml).
+var version = "dev"
+
 func main() {
 	if err := run(os.Args[1:]); err != nil {
 		fmt.Fprintf(os.Stderr, "go-report-builder: %v\n", err)
@@ -18,8 +21,14 @@ func main() {
 }
 
 func run(argv []string) error {
+	if len(argv) == 1 && (argv[0] == "-version" || argv[0] == "--version") {
+		fmt.Println(version)
+		return nil
+	}
+
 	fs := flag.NewFlagSet("go-report-builder", flag.ExitOnError)
 	var (
+		showVersion = fs.Bool("version", false, "print version and exit")
 		configPath  = fs.String("config", config.DefaultPath, "path to YAML config file (optional)")
 		output      = fs.String("o", "coverage-report.html", "output HTML file path")
 		root        = fs.String("root", "", "module root directory (default: auto-detect from go.mod)")
@@ -35,6 +44,11 @@ func run(argv []string) error {
 	}
 	if err := fs.Parse(argv); err != nil {
 		return err
+	}
+
+	if *showVersion {
+		fmt.Println(version)
+		return nil
 	}
 
 	set := map[string]bool{}

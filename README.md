@@ -3,6 +3,9 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/escu-io/go-report-builder.svg)](https://pkg.go.dev/github.com/escu-io/go-report-builder)
 [![Go Report Card](https://goreportcard.com/badge/github.com/escu-io/go-report-builder)](https://goreportcard.com/report/github.com/escu-io/go-report-builder)
 [![CI](https://github.com/escu-io/go-report-builder/actions/workflows/ci.yml/badge.svg)](https://github.com/escu-io/go-report-builder/actions/workflows/ci.yml)
+[![Lint](https://github.com/escu-io/go-report-builder/actions/workflows/lint.yml/badge.svg)](https://github.com/escu-io/go-report-builder/actions/workflows/lint.yml)
+[![Release](https://github.com/escu-io/go-report-builder/actions/workflows/release.yml/badge.svg)](https://github.com/escu-io/go-report-builder/actions/workflows/release.yml)
+[![Latest Release](https://img.shields.io/github/v/release/escu-io/go-report-builder)](https://github.com/escu-io/go-report-builder/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/escu-io/go-report-builder)](go.mod)
 
@@ -72,6 +75,23 @@ go-report-builder --root /path/to/module --tags integration,e2e cover.out
 | `-profile-only`| `false`                       | Only include files present in the profiles (disables discovery)    |
 
 Open the generated HTML file in any browser.
+
+## CI integration
+
+Publish an HTML artifact from GitHub Actions (downloadable from each workflow run):
+
+```yaml
+# .github/workflows/coverage-report.yml — full example in docs/examples/
+- run: go test -race -coverprofile=cover.out ./...
+- run: go install github.com/escu-io/go-report-builder/cmd/go-report-builder@latest
+- run: go-report-builder -o coverage-report.html cover.out
+- uses: actions/upload-artifact@v4
+  with:
+    name: coverage-report
+    path: coverage-report.html
+```
+
+See [`docs/examples/github-actions-coverage-report.yml`](docs/examples/github-actions-coverage-report.yml).
 
 ## Config file
 
@@ -158,8 +178,33 @@ on the same profile — that difference is intentional. Pass `--profile-only` (C
 ```bash
 make test        # run tests
 make lint        # go vet
+make lint-ci     # golangci-lint (matches CI)
 make build       # build the CLI
 make report      # self-test: build a coverage report of this repo
+make help        # all targets
+```
+
+### Releases
+
+This project uses [Semantic Versioning](https://semver.org/), [Conventional Commits](https://www.conventionalcommits.org/),
+[git-cliff](https://git-cliff.org/) for `CHANGELOG.md`, and [GoReleaser](https://goreleaser.com/) for GitHub Releases
+and multi-platform CLI binaries.
+
+Maintainers:
+
+```bash
+# Refresh the [Unreleased] changelog section
+make changelog
+
+# Cut a release (runs tests, updates changelog, tags, pushes — CI publishes binaries)
+VERSION=0.2.0 make release
+# or: BUMP=patch make release
+```
+
+Configure GitHub repo description and topics:
+
+```bash
+./scripts/setup-github-repo.sh
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines and

@@ -155,11 +155,8 @@ func BuildFileDetail(resolver Resolver, importPath string, blocks []profile.Bloc
 	}
 
 	if len(lines) == 0 {
-		detail.Lines = append(detail.Lines, model.DetailLine{
-			Num:   0,
-			State: model.LineNotTracked,
-			HTML:  `<span class="cmt">// source unavailable</span>`,
-		})
+		// Leave Lines empty so the UI can show a proper empty state instead of a
+		// fake source row with line-number gutter artifacts.
 		return detail, nil
 	}
 

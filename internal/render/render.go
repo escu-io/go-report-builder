@@ -8,6 +8,7 @@ import (
 	"html/template"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/escu-io/go-report-builder/internal/model"
 )
@@ -119,8 +120,13 @@ func HTML(w io.Writer, report *model.Report) error {
 	return err
 }
 
-// WriteFile renders the report to a path.
+// WriteFile renders the report to a path, creating parent directories as needed.
 func WriteFile(path string, report *model.Report) error {
+	if dir := filepath.Dir(path); dir != "" && dir != "." {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return fmt.Errorf("create output directory: %w", err)
+		}
+	}
 	f, err := os.Create(path)
 	if err != nil {
 		return err

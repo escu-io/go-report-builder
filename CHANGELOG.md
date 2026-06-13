@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- GitHub Actions: release (GoReleaser), lint (golangci-lint), CodeQL, Release Drafter, and CI coverage report artifacts.
+- Semantic release tooling: `scripts/release.sh`, `scripts/changelog.sh` (git-cliff), and `.goreleaser.yaml`.
+- Repository adoption assets: issue/PR templates, Dependabot, `SECURITY.md`, CI integration example, and `scripts/setup-github-repo.sh`.
+- CLI `-version` flag (set via GoReleaser ldflags on release builds).
+
+## [0.1.2] - 2026-06-13
+
+### Changed
+
+- Treemap tile distribution improvements.
+
 ## [0.1.1] - 2026-06-13
 
 ### Fixed
@@ -30,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `-tags` flag to pass build tags honored during discovery (config: `buildTags`).
 - MIT license, contribution guide, Makefile, and CI workflow.
 
-[Unreleased]: https://github.com/escu-io/go-report-builder/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/escu-io/go-report-builder/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/escu-io/go-report-builder/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/escu-io/go-report-builder/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/escu-io/go-report-builder/releases/tag/v0.1.0

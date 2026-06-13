@@ -68,6 +68,7 @@
     filePct: document.getElementById('file-pct'),
     runBadges: document.getElementById('run-badges'),
     sourceView: document.querySelector('#source-view code'),
+    sourcePanel: document.getElementById('source-view'),
     header: document.querySelector('.app-header'),
     toolbar: document.querySelector('.toolbar'),
     footer: document.querySelector('.legend'),
@@ -85,18 +86,31 @@
   }
 
   /* ---------- color helpers ---------- */
-  function pctColor(pct) {
+  // The single source of truth for coverage hue: a red→amber→green ramp built
+  // from the app's color profile. Everything that paints by percentage — the
+  // gauge, tree bars, source gutters and the treemap — derives from this so a
+  // given percentage reads as the same color across the whole UI.
+  function pctRgb(pct) {
     const t = Math.max(0, Math.min(100, pct)) / 100;
     return t <= 0.5
-      ? lerpColor(colors.min, colors.mid, t * 2)
-      : lerpColor(colors.mid, colors.max, (t - 0.5) * 2);
+      ? lerpRgb(colors.min, colors.mid, t * 2)
+      : lerpRgb(colors.mid, colors.max, (t - 0.5) * 2);
+  }
+  function pctColor(pct) {
+    const c = pctRgb(pct);
+    return `rgb(${c.r},${c.g},${c.b})`;
+  }
+  function lerpRgb(a, b, t) {
+    const pa = hexToRgb(a), pb = hexToRgb(b);
+    return {
+      r: Math.round(pa.r + (pb.r - pa.r) * t),
+      g: Math.round(pa.g + (pb.g - pa.g) * t),
+      b: Math.round(pa.b + (pb.b - pa.b) * t),
+    };
   }
   function lerpColor(a, b, t) {
-    const pa = hexToRgb(a), pb = hexToRgb(b);
-    const r = Math.round(pa.r + (pb.r - pa.r) * t);
-    const g = Math.round(pa.g + (pb.g - pa.g) * t);
-    const bl = Math.round(pa.b + (pb.b - pa.b) * t);
-    return `rgb(${r},${g},${bl})`;
+    const c = lerpRgb(a, b, t);
+    return `rgb(${c.r},${c.g},${c.b})`;
   }
   function hexToRgb(hex) {
     const h = hex.replace('#', '');
@@ -105,40 +119,25 @@
   function formatPct(n) { return (Math.round(n * 10) / 10).toFixed(1) + '%'; }
   function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
-  // Multi-stop coverage gradient for the treemap: a rich red→orange→pale-yellow→
-  // light-green→medium-green→dark-green ramp where each band maps to a coverage
-  // range, so every intermediate percentage gets its own shade.
-  const TM_STOPS = [
-    { p: 0.00, c: '#A9001A' },   // deep red — lowest / 0%
-    { p: 0.30, c: '#E67E22' },   // orange — low-mid
-    { p: 0.55, c: '#FFF9A6' },   // pale yellow — mid-range
-    { p: 0.65, c: '#A8E092' },   // light green — lower-green / container fill
-    { p: 0.80, c: '#34A853' },   // medium green — standard high
-    { p: 1.00, c: '#0B6A3A' },   // dark green — highest / 90%+
-  ];
+  // "Tinted glass" coverage ramp for the treemap. It still anchors on the app's
+  // red (low) and green (high), but coverage passes through a warm pale-yellow
+  // middle (leaning yellow rather than cool white), so partial coverage reads as
+  // a frosted pane. Combined with the translucent fills in CSS (more transparent
+  // on the outer container layer) the boxes look like tinted glass over the
+  // dark surface.
+  const TM_MID = '#f7f2d4';
   function tmRgb(pct) {
     const t = Math.max(0, Math.min(100, pct)) / 100;
-    let lo = TM_STOPS[0], hi = TM_STOPS[TM_STOPS.length - 1];
-    for (let i = 0; i < TM_STOPS.length - 1; i++) {
-      if (t >= TM_STOPS[i].p && t <= TM_STOPS[i + 1].p) {
-        lo = TM_STOPS[i]; hi = TM_STOPS[i + 1]; break;
-      }
-    }
-    const span = hi.p - lo.p;
-    const local = span > 0 ? (t - lo.p) / span : 0;
-    const a = hexToRgb(lo.c), b = hexToRgb(hi.c);
-    return {
-      r: Math.round(a.r + (b.r - a.r) * local),
-      g: Math.round(a.g + (b.g - a.g) * local),
-      b: Math.round(a.b + (b.b - a.b) * local),
-    };
+    return t <= 0.5
+      ? lerpRgb(colors.min, TM_MID, t * 2)
+      : lerpRgb(TM_MID, colors.max, (t - 0.5) * 2);
   }
   function tmColor(pct) {
     const c = tmRgb(pct);
     return `rgb(${c.r},${c.g},${c.b})`;
   }
-  // A stronger (darker) shade of the same gradient color, used for the borders /
-  // margins so each box reads as enclosed by a richer version of its own color.
+  // A stronger (darker) shade of the same coverage color for the borders, so the
+  // glassy fills still read as discrete panes with a defined edge.
   function tmStrong(pct) {
     const c = tmRgb(pct);
     const k = 0.62; // darken toward black
@@ -490,14 +489,40 @@
   // Pack file chips into rows that fit within `w` (a simple wrap/flow layout).
   // Returns [{ items: [{file, w}], w }] in draw order.
   function packChips(files, w) {
+    if (w <= 0) return [];
     const rows = [];
     let cur = [], curW = 0;
-    files.forEach(f => {
-      const cw = tmChipWidth(f.name);
-      if (cur.length && curW + FILE_CHIP_GAP + cw > w) { rows.push({ items: cur, w: curW }); cur = []; curW = 0; }
+    for (const f of files) {
+      let cw = Math.min(tmChipWidth(f.name), w);
+      if (cur.length && curW + FILE_CHIP_GAP + cw > w) {
+        rows.push({ items: cur, w: curW });
+        cur = [];
+        curW = 0;
+        cw = Math.min(tmChipWidth(f.name), w);
+      }
+      let avail = w - curW - (cur.length ? FILE_CHIP_GAP : 0);
+      if (avail <= 0) {
+        rows.push({ items: cur, w: curW });
+        cur = [];
+        curW = 0;
+        avail = w;
+        cw = Math.min(tmChipWidth(f.name), w);
+      }
+      cw = Math.min(cw, avail);
+      if (cw < FILE_CHIP_MINW) {
+        if (cur.length) {
+          rows.push({ items: cur, w: curW });
+          cur = [];
+          curW = 0;
+          cw = Math.min(tmChipWidth(f.name), w);
+          avail = w;
+          cw = Math.min(cw, avail);
+        }
+        if (cw < FILE_CHIP_MINW) cw = Math.min(w, FILE_CHIP_MINW);
+      }
       curW += (cur.length ? FILE_CHIP_GAP : 0) + cw;
       cur.push({ file: f, w: cw });
-    });
+    }
     if (cur.length) rows.push({ items: cur, w: curW });
     return rows;
   }
@@ -575,11 +600,21 @@
     switchView('files');
   }
 
-  function tmRect(x, y, w, h, cls) {
+  // Corner radius for treemap rects, capped so tiny boxes never turn into pills.
+  // Packages/containers use --radius; file chips use --radius-sm.
+  function tmCornerRadius(w, h, token) {
+    const raw = getComputedStyle(document.documentElement).getPropertyValue(token).trim();
+    const base = parseFloat(raw) || 9;
+    return Math.min(base, Math.max(0, w) / 2, Math.max(0, h) / 2);
+  }
+  function tmRect(x, y, w, h, cls, radiusToken) {
     const r = document.createElementNS(SVGNS, 'rect');
+    const ww = Math.max(0, w), hh = Math.max(0, h);
     r.setAttribute('x', x); r.setAttribute('y', y);
-    r.setAttribute('width', Math.max(0, w)); r.setAttribute('height', Math.max(0, h));
-    r.setAttribute('rx', 4);
+    r.setAttribute('width', ww); r.setAttribute('height', hh);
+    const rx = tmCornerRadius(ww, hh, radiusToken || '--radius');
+    r.setAttribute('rx', rx);
+    r.setAttribute('ry', rx);
     if (cls) r.setAttribute('class', cls);
     return r;
   }
@@ -596,9 +631,13 @@
     const id = 'tmclip-' + (tmClipSeq++);
     const cp = document.createElementNS(SVGNS, 'clipPath');
     cp.setAttribute('id', id);
+    const ww = Math.max(0, w), hh = Math.max(0, h);
     const r = document.createElementNS(SVGNS, 'rect');
     r.setAttribute('x', x); r.setAttribute('y', y);
-    r.setAttribute('width', Math.max(0, w)); r.setAttribute('height', Math.max(0, h));
+    r.setAttribute('width', ww); r.setAttribute('height', hh);
+    const rx = tmCornerRadius(ww, hh, '--radius-sm');
+    r.setAttribute('rx', rx);
+    r.setAttribute('ry', rx);
     cp.appendChild(r);
     parent.appendChild(cp);
     const g = document.createElementNS(SVGNS, 'g');
@@ -646,7 +685,7 @@
       t1.textContent = tmTrunc(n.name, x + cw - 7 - lx, 7.6);
       g.appendChild(t1);
       if (ch > 46) {
-        const subText = isPkg ? `${formatPct(n.percent)} · ${tmCountLeaves(n)} files` : formatPct(n.percent);
+        const subText = formatPct(n.percent);
         const sub = tmTrunc(subText, cw - 14, 6.2);
         if (sub) {
           const t2 = document.createElementNS(SVGNS, 'text');
@@ -672,8 +711,7 @@
   // chip is at its maximum width.
   function tmDrawFileChip(svg, n, x, y, w, h) {
     const g = document.createElementNS(SVGNS, 'g');
-    const rect = tmRect(x, y, w, h, 'treemap-file');
-    rect.setAttribute('rx', 4);
+    const rect = tmRect(x, y, w, h, 'treemap-file', '--radius-sm');
     rect.setAttribute('fill', tmColor(n.percent));
     rect.setAttribute('stroke', tmStrong(n.percent));
     tmTitle(rect, n);
@@ -704,8 +742,7 @@
   // files visibly signals there is more than what is shown.
   function tmDrawMoreChip(svg, count, x, y, w, h, onClick) {
     const g = document.createElementNS(SVGNS, 'g');
-    const rect = tmRect(x, y, w, h, 'treemap-more');
-    rect.setAttribute('rx', 4);
+    const rect = tmRect(x, y, w, h, 'treemap-more', '--radius-sm');
     const title = document.createElementNS(SVGNS, 'title');
     title.textContent = `${count} more file${count === 1 ? '' : 's'} — click to open this package`;
     rect.appendChild(title);
@@ -755,9 +792,11 @@
     shown.forEach(row => {
       let cx = x; // left aligned
       row.items.forEach(it => {
-        if (it.more) tmDrawMoreChip(svg, it.more, cx, cy, it.w, FILE_CHIP_H, onMore);
-        else tmDrawFileChip(svg, it.file, cx, cy, it.w, FILE_CHIP_H);
-        cx += it.w + FILE_CHIP_GAP;
+        const chipW = Math.min(it.w, Math.max(0, x + w - cx));
+        if (chipW <= 0) return;
+        if (it.more) tmDrawMoreChip(svg, it.more, cx, cy, chipW, FILE_CHIP_H, onMore);
+        else tmDrawFileChip(svg, it.file, cx, cy, chipW, FILE_CHIP_H);
+        cx += chipW + FILE_CHIP_GAP;
       });
       cy += rowPitch;
     });
@@ -794,7 +833,7 @@
     const label = document.createElementNS(SVGNS, 'text');
     label.setAttribute('x', labelX); label.setAttribute('y', y + headerH - 7);
     label.setAttribute('class', 'treemap-header-label');
-    const meta = files.length > 0 ? `  ${formatPct(n.percent)} · ${files.length}f` : `  ${formatPct(n.percent)}`;
+    const meta = `  ${formatPct(n.percent)}`;
     label.textContent = tmTrunc(`${n.name}${meta}`, x + cw - 14 - labelX, 7);
     g.appendChild(label);
 
@@ -1104,6 +1143,27 @@
   }
 
   /* ---------- file detail ---------- */
+  function isSourceUnavailable(detail) {
+    if (!detail || !detail.lines || !detail.lines.length) return true;
+    // Older reports injected a single placeholder comment line.
+    if (detail.lines.length === 1 && !detail.lines[0].num &&
+        /source unavailable/i.test(detail.lines[0].html || '')) return true;
+    return false;
+  }
+  function renderSourceEmpty(title, hint) {
+    els.sourcePanel.classList.add('is-empty');
+    els.sourceView.innerHTML =
+      `<div class="source-empty">` +
+        `<span class="source-empty-icon" aria-hidden="true">` +
+          `<svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">` +
+            `<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>` +
+            `<path d="M14 2v6h6"></path><path d="M9 13h6"></path><path d="M9 17h4"></path>` +
+          `</svg>` +
+        `</span>` +
+        `<span class="source-empty-title">${esc(title)}</span>` +
+        `<span class="source-empty-hint">${esc(hint)}</span>` +
+      `</div>`;
+  }
   function renderFileDetail() {
     if (!selectedFile) { selectedFile = Object.keys(data.files).sort()[0] || null; }
     if (selectedFile) saveState({ selectedFile });
@@ -1115,7 +1175,7 @@
       els.filePath.textContent = '';
       els.filePct.textContent = '';
       els.runBadges.innerHTML = '';
-      els.sourceView.innerHTML = '<div class="source-empty">No files available.</div>';
+      renderSourceEmpty('No files available', 'This report has no coverable files to display.');
       alignSidebar();
       return;
     }
@@ -1138,11 +1198,15 @@
     });
 
     els.sourceView.innerHTML = '';
-    if (!detail || !detail.lines || !detail.lines.length) {
-      els.sourceView.innerHTML = '<div class="source-empty">Source unavailable for this file.</div>';
+    if (isSourceUnavailable(detail)) {
+      renderSourceEmpty(
+        'Source unavailable',
+        'The source file was not found on disk when this report was generated.'
+      );
       alignSidebar();
       return;
     }
+    els.sourcePanel.classList.remove('is-empty');
     const frag = document.createDocumentFragment();
     detail.lines.forEach(line => {
       const row = document.createElement('div');

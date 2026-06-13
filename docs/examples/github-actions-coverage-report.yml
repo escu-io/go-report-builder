@@ -1,0 +1,43 @@
+# Example: generate a coverage report in GitHub Actions
+#
+# Copy this workflow into your repository as .github/workflows/coverage-report.yml
+# and adjust the module path / test command as needed.
+#
+# The HTML artifact can be downloaded from the Actions run summary.
+
+name: Coverage Report
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Run tests with coverage
+        run: go test -race -coverprofile=cover.out ./...
+
+      - name: Install go-report-builder
+        run: go install github.com/escu-io/go-report-builder/cmd/go-report-builder@latest
+
+      - name: Generate HTML report
+        run: go-report-builder -o coverage-report.html cover.out
+
+      - name: Upload HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage-report.html
+          retention-days: 30

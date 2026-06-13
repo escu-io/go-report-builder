@@ -10,11 +10,9 @@
   <header class="app-header">
     <div class="brand">
       <div class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 3v18h18"></path>
-          <rect x="7" y="11" width="3" height="6" rx="1"></rect>
-          <rect x="12" y="7" width="3" height="10" rx="1"></rect>
-          <rect x="17" y="4" width="3" height="13" rx="1"></rect>
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.5 12a8.5 8.5 0 1 1-3.2-6.65"></path>
+          <path d="M8.5 11.8l3 3 6-6.6"></path>
         </svg>
       </div>
       <div class="brand-text">
@@ -48,7 +46,7 @@
       <span class="seg-indicator" id="seg-indicator"></span>
       <button type="button" class="seg" data-view="treemap" role="tab" aria-selected="true">
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1"></rect><rect x="13" y="3" width="8" height="5" rx="1"></rect><rect x="13" y="10" width="8" height="11" rx="1"></rect><rect x="3" y="13" width="8" height="8" rx="1"></rect></svg>
-        Treemap
+        Tree Map
       </button>
       <button type="button" class="seg" data-view="files" role="tab" aria-selected="false">
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
@@ -86,8 +84,14 @@
             </button>
             <span class="explorer-sidebar-title">Files</span>
             <div class="tree-actions">
-              <button type="button" id="tree-expand">Expand all</button>
-              <button type="button" id="tree-collapse">Collapse all</button>
+              <button type="button" id="tree-expand" title="Expand all" aria-label="Expand all">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 9 4-4 4 4"></path><path d="m16 15-4 4-4-4"></path></svg>
+                <span class="ta-label">Expand all</span>
+              </button>
+              <button type="button" id="tree-collapse" title="Collapse all" aria-label="Collapse all">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m8 5 4 4 4-4"></path><path d="m8 19 4-4 4 4"></path></svg>
+                <span class="ta-label">Collapse all</span>
+              </button>
             </div>
           </div>
           <div class="tree-scroll" id="tree-scroll"></div>
@@ -114,11 +118,6 @@
     <span class="legend-end">0%</span>
     <span class="legend-bar" id="legend-bar"></span>
     <span class="legend-end">100%</span>
-    <span class="legend-sep"></span>
-    <span class="legend-chip"><i class="dot dot-covered"></i>Covered</span>
-    <span class="legend-chip"><i class="dot dot-partial"></i>Partial</span>
-    <span class="legend-chip"><i class="dot dot-uncovered"></i>Uncovered</span>
-    <span class="legend-chip"><i class="dot dot-not-tracked"></i>Not tracked</span>
   </footer>
 
   <script type="application/json" id="coverage-data">{{.Data}}</script>

@@ -1,0 +1,1896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coverage Report</title>
+  <style>:root {
+  --bg: #0b1120;
+  --bg-grad: radial-gradient(1200px 600px at 80% -10%, rgba(56,189,248,0.10), transparent 60%),
+             radial-gradient(900px 500px at 0% 0%, rgba(168,85,247,0.08), transparent 55%);
+  --surface: #111a2e;
+  --surface-2: #16203a;
+  --elevated: #1b2742;
+  --text: #e8edf7;
+  --muted: #93a1bd;
+  --faint: #64748b;
+  --border: #243049;
+  --border-strong: #33425f;
+  --accent: #38bdf8;
+  --accent-soft: rgba(56,189,248,0.14);
+  --line-num: #5b6b88;
+  --shadow: 0 12px 40px -12px rgba(0,0,0,0.6);
+  --shadow-sm: 0 4px 16px -6px rgba(0,0,0,0.5);
+  --radius: 14px;
+  --radius-sm: 9px;
+  --cov: #22c55e;
+  --part: #f59e0b;
+  --unc: #ef4444;
+  --tm-border: rgba(11,17,32,0.85);
+  --tm-border-dir: rgba(11,17,32,0.95);
+  /* Live layout metrics (kept in sync from JS) drive the sticky stack so the
+     toolbar and sidebar always sit flush under the header regardless of how
+     much the header wraps or how large the fluid fonts get. */
+  --header-h: 64px;
+  --toolbar-h: 60px;
+  --footer-h: 44px;
+  --stack-h: calc(var(--header-h) + var(--toolbar-h));
+  /* Horizontal page padding scales gently with viewport width. */
+  --pad-x: clamp(0.85rem, 0.4rem + 1.6vw, 2rem);
+}
+
+/* Fluid base font: shrinks on small phones, grows on large monitors. Every
+   rem-based size in the UI scales with this. */
+html {
+  font-size: clamp(13.5px, 12.4px + 0.32vw, 18px);
+}
+
+body.theme-light {
+  --bg: #eef2f9;
+  --bg-grad: radial-gradient(1200px 600px at 80% -10%, rgba(56,189,248,0.18), transparent 60%),
+             radial-gradient(900px 500px at 0% 0%, rgba(168,85,247,0.12), transparent 55%);
+  --surface: #ffffff;
+  --surface-2: #f5f8fd;
+  --elevated: #ffffff;
+  --text: #0f172a;
+  --muted: #5a6b87;
+  --faint: #8a99b5;
+  --border: #e2e8f3;
+  --border-strong: #cdd7e8;
+  --accent: #0284c7;
+  --accent-soft: rgba(2,132,199,0.10);
+  --line-num: #aab6cc;
+  --shadow: 0 16px 40px -18px rgba(15,23,42,0.35);
+  --shadow-sm: 0 6px 18px -10px rgba(15,23,42,0.25);
+  --tm-border: rgba(255,255,255,0.92);
+  --tm-border-dir: #ffffff;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--bg);
+  background-image: var(--bg-grad);
+  background-attachment: fixed;
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "cv02","cv03","cv04";
+}
+button { font-family: inherit; }
+::selection { background: var(--accent-soft); }
+
+/* ---------- Header ---------- */
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.6rem, 0.2rem + 1vw, 1.25rem);
+  padding: 0.9rem var(--pad-x);
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+.brand { display: flex; align-items: center; gap: 0.85rem; min-width: 0; }
+.brand-mark {
+  width: 42px; height: 42px;
+  display: grid; place-items: center;
+  border-radius: 12px;
+  color: #fff;
+  background: linear-gradient(135deg, #38bdf8, #818cf8 55%, #a855f7);
+  box-shadow: 0 8px 20px -8px rgba(56,189,248,0.7);
+}
+.brand-text { min-width: 0; }
+h1 { margin: 0; font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; }
+.module {
+  margin: 2px 0 0; color: var(--muted); font-size: 0.78rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 36ch;
+}
+
+.headline { display: flex; align-items: center; gap: 0.8rem; margin-left: auto; }
+.gauge { position: relative; width: 56px; height: 56px; display: grid; place-items: center; }
+.gauge svg { transform: rotate(-90deg); }
+.gauge-track { fill: none; stroke: var(--border); stroke-width: 3.2; }
+.gauge-fill { fill: none; stroke: var(--accent); stroke-width: 3.2; stroke-linecap: round;
+  stroke-dasharray: 97.4; stroke-dashoffset: 97.4; transition: stroke-dashoffset 0.7s cubic-bezier(.4,0,.2,1), stroke 0.4s; }
+.gauge-pct { position: absolute; font-size: 0.72rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.headline-meta { display: flex; flex-direction: column; }
+.headline-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); }
+.meta { color: var(--muted); font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+
+.icon-btn {
+  display: grid; place-items: center;
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.18s, border-color 0.18s, transform 0.1s;
+}
+.icon-btn:hover { border-color: var(--border-strong); background: var(--elevated); }
+.icon-btn:active { transform: scale(0.94); }
+.icon-moon { display: none; }
+body.theme-light .icon-sun { display: none; }
+body.theme-light .icon-moon { display: block; }
+
+/* ---------- Toolbar ---------- */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem var(--pad-x);
+  flex-wrap: wrap;
+  position: sticky;
+  top: calc(var(--header-h) - 1px);
+  z-index: 30;
+  background: color-mix(in srgb, var(--bg) 80%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+}
+
+/* Segmented control */
+.segmented {
+  position: relative;
+  display: inline-flex;
+  padding: 4px;
+  gap: 2px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm);
+}
+.seg-indicator {
+  position: absolute;
+  top: 4px; left: 4px;
+  height: calc(100% - 8px);
+  border-radius: 9px;
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  transition: transform 0.28s cubic-bezier(.4,0,.2,1), width 0.28s cubic-bezier(.4,0,.2,1);
+  pointer-events: none;
+}
+.seg {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  padding: 0.45rem 0.85rem;
+  border-radius: 9px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+.seg svg { opacity: 0.85; }
+.seg:hover { color: var(--text); }
+.seg.active { color: var(--accent); }
+
+/* Search */
+.search-box {
+  position: relative;
+  flex: 1 1 280px;
+  max-width: 460px;
+}
+.search-icon {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--faint); pointer-events: none;
+}
+#search-input {
+  width: 100%;
+  padding: 0.6rem 3.4rem 0.6rem 2.3rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  color: var(--text);
+  font-size: 0.88rem;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+#search-input::placeholder { color: var(--faint); }
+#search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.search-clear {
+  position: absolute; right: 34px; top: 50%; transform: translateY(-50%);
+  display: grid; place-items: center;
+  width: 22px; height: 22px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 6px; color: var(--muted); cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.search-clear:hover { color: var(--text); border-color: var(--border-strong); }
+.search-hint {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  font-size: 0.72rem; color: var(--faint);
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 1px 6px; font-family: ui-monospace, monospace;
+}
+/* Run filter dropdown */
+.run-filter { position: relative; }
+.run-trigger {
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  padding: 0.55rem 0.8rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  color: var(--text);
+  font-size: 0.84rem; font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.18s, background 0.18s;
+}
+.run-trigger:hover { border-color: var(--border-strong); }
+.run-trigger .chevron { color: var(--faint); transition: transform 0.2s; }
+.run-filter.open .chevron { transform: rotate(180deg); }
+.run-menu {
+  position: absolute;
+  top: calc(100% + 6px); right: 0;
+  min-width: 220px;
+  padding: 6px;
+  background: var(--elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  z-index: 60;
+  display: none;
+}
+.run-filter.open .run-menu { display: block; }
+.run-option {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.5rem 0.55rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+.run-option:hover { background: var(--surface-2); }
+.run-option input { accent-color: var(--accent); width: 15px; height: 15px; }
+.run-option .ro-label { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- Main ---------- */
+main { padding: 0.85rem var(--pad-x) 1.5rem; flex: 1; }
+.view { display: none; animation: fade 0.25s ease; }
+.view.active { display: block; }
+@keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+.breadcrumb {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 0.15rem;
+  margin-bottom: 0.85rem; font-size: 0.85rem; color: var(--muted);
+}
+.breadcrumb button {
+  background: none; border: none; color: var(--muted); cursor: pointer;
+  font-size: 0.85rem; padding: 0.2rem 0.4rem; border-radius: 6px;
+}
+.breadcrumb button:hover { color: var(--text); background: var(--surface-2); }
+.breadcrumb .crumb-current { color: var(--text); font-weight: 600; padding: 0.2rem 0.4rem; }
+.breadcrumb .sep { color: var(--faint); }
+
+/* Treemap */
+#view-treemap svg {
+  width: 100%;
+  height: clamp(360px, calc(100vh - var(--stack-h) - var(--footer-h) - 5rem), 1100px);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  display: block;
+}
+.treemap-cell { stroke-width: 2px; cursor: pointer; transition: filter 0.15s; }
+.treemap-cell:hover { filter: brightness(1.14); }
+.treemap-cell.is-dir { stroke-width: 2px; stroke-dasharray: 5 3; }
+.treemap-file { stroke-width: 1.5px; cursor: pointer; transition: filter 0.15s; }
+.treemap-file:hover { filter: brightness(1.16); }
+.treemap-container { stroke-width: 2px; transition: filter 0.15s, stroke 0.15s; }
+.treemap-container.tm-clickable { cursor: pointer; }
+.treemap-container.tm-clickable:hover { filter: brightness(1.08); stroke: var(--accent); stroke-width: 2.75px; }
+.treemap-others { stroke-dasharray: 3 3; opacity: 0.85; }
+.treemap-more { fill: var(--surface-2); stroke: var(--border-strong); stroke-width: 1.5px; cursor: pointer; transition: filter 0.15s; }
+.treemap-more:hover { filter: brightness(1.12); }
+.treemap-more-label { pointer-events: none; font-size: 13px; font-weight: 700; fill: var(--muted); text-anchor: middle; dominant-baseline: central; }
+.treemap-header-label { pointer-events: none; font-size: 12.5px; font-weight: 700; fill: #fff; letter-spacing: 0.01em; paint-order: stroke; stroke: rgba(0,0,0,0.4); stroke-width: 2.75px; stroke-linejoin: round; }
+.treemap-label { pointer-events: none; font-size: 13px; font-weight: 600; fill: #fff; paint-order: stroke; stroke: rgba(0,0,0,0.4); stroke-width: 2.75px; stroke-linejoin: round; }
+.treemap-label.sub { font-size: 11.5px; font-weight: 500; opacity: 0.92; }
+.treemap-glyph { pointer-events: none; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: 0.95; }
+.treemap-icon { pointer-events: none; }
+.treemap-icon path { fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; opacity: 0.95; }
+.treemap-file-label { pointer-events: none; font-size: 12px; font-weight: 600; fill: #fff; dominant-baseline: central; paint-order: stroke; stroke: rgba(0,0,0,0.4); stroke-width: 2.5px; stroke-linejoin: round; }
+.treemap-empty { padding: 3rem; text-align: center; color: var(--muted); }
+
+/* Explorer: tree (left) + file detail (right) */
+.explorer {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+.explorer-sidebar {
+  flex: 0 0 clamp(240px, 26vw, 340px);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  max-height: calc(100vh - var(--stack-h) - var(--footer-h) - 1.5rem);
+  position: sticky;
+  top: calc(var(--stack-h) + 0.85rem);
+  overflow: hidden;
+}
+.explorer-sidebar-head {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+}
+.explorer-sidebar-title { flex: 1; min-width: 0; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tree-scroll { overflow: auto; padding: 0.4rem; flex: 1; }
+.tree-empty { padding: 1.5rem 1rem; text-align: center; color: var(--muted); font-size: 0.85rem; }
+
+/* Sidebar toggle, integrated into the tree header */
+.explorer-toggle {
+  flex: none;
+  display: grid; place-items: center;
+  width: 26px; height: 26px;
+  padding: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.18s, border-color 0.18s, background 0.18s;
+}
+.explorer-toggle:hover { color: var(--text); border-color: var(--border-strong); background: var(--elevated); }
+.explorer-toggle svg { display: block; transition: transform 0.25s cubic-bezier(.4,0,.2,1); }
+
+/* Collapsed: sidebar shrinks to a compact rail showing just the toggle */
+.explorer.sidebar-collapsed .explorer-sidebar {
+  flex: 0 0 auto;
+  max-height: none;
+  overflow: visible;
+}
+.explorer.sidebar-collapsed .explorer-sidebar-head { border-bottom: none; padding: 0.4rem; }
+.explorer.sidebar-collapsed .explorer-sidebar-title,
+.explorer.sidebar-collapsed .explorer-sidebar .tree-actions,
+.explorer.sidebar-collapsed .tree-scroll { display: none; }
+.explorer.sidebar-collapsed .explorer-toggle svg { transform: rotate(180deg); }
+
+.explorer-detail { flex: 1 1 auto; min-width: 0; }
+
+.tree-actions { display: flex; gap: 0.4rem; }
+.tree-actions button {
+  background: var(--surface-2); border: 1px solid var(--border); color: var(--muted);
+  font-size: 0.72rem; font-weight: 600; padding: 0.25rem 0.5rem; border-radius: 7px; cursor: pointer;
+}
+.tree-actions button:hover { color: var(--text); border-color: var(--border-strong); }
+.tree-list { list-style: none; margin: 0; padding: 0; }
+.tree-list .tree-list { margin-left: 0; }
+.tree-scroll > .tree-list { width: max-content; min-width: 100%; }
+.tree-row {
+  display: flex; align-items: center; gap: 0.55rem;
+  padding: 0.32rem 0.6rem;
+  border-radius: 8px;
+  cursor: pointer;
+  position: relative;
+}
+.tree-row:hover { background: var(--surface-2); }
+.tree-row.is-file:hover { background: var(--accent-soft); }
+.tree-row.is-file.active .tree-name { color: var(--accent); font-weight: 600; }
+.tree-name mark { background: transparent; color: var(--accent); font-weight: 800; }
+.tree-toggle {
+  width: 16px; height: 16px; flex: none;
+  display: grid; place-items: center;
+  color: var(--faint);
+  transition: transform 0.18s;
+}
+.tree-toggle.open { transform: rotate(90deg); }
+.tree-toggle.leaf { visibility: hidden; }
+.tree-icon { flex: none; color: var(--faint); display: grid; place-items: center; }
+.tree-row.is-file .tree-icon { color: var(--accent); }
+.tree-name { font-size: 0.84rem; flex: none; white-space: nowrap; }
+.tree-row.is-dir .tree-name { font-weight: 600; }
+.tree-spacer { flex: 1; min-width: 0.75rem; }
+.tree-meta {
+  position: sticky; right: 0;
+  flex: none;
+  display: flex; align-items: center; gap: 0.4rem;
+  padding-left: 0.5rem;
+  background: var(--surface);
+  box-shadow: -8px 0 8px -8px rgba(0, 0, 0, 0.18);
+}
+.tree-row:hover .tree-meta { background: var(--surface-2); }
+.tree-row.is-file:hover .tree-meta { background: var(--accent-soft); }
+.bar-wrap { width: 40px; flex: none; height: 5px; background: var(--border); border-radius: 999px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 999px; transition: width 0.4s; }
+.pct-label { width: 2.6rem; flex: none; text-align: right; font-variant-numeric: tabular-nums; font-size: 0.72rem; font-weight: 600; }
+.count-label { display: none; }
+
+/* File detail */
+.file-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  margin-bottom: 0.85rem; flex-wrap: wrap;
+}
+.file-title { min-width: 0; }
+.file-name { display: block; font-size: 1rem; font-weight: 700; }
+.file-path {
+  display: block; font-size: 0.78rem; color: var(--faint);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.file-stats { display: flex; align-items: center; gap: 1rem; }
+.file-pct { font-size: 1.35rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.run-badges { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.badge {
+  display: inline-flex; align-items: center; gap: 0.3rem;
+  font-size: 0.74rem; font-weight: 600;
+  padding: 0.25rem 0.55rem; border-radius: 999px;
+  background: var(--surface-2); border: 1px solid var(--border); color: var(--muted);
+}
+.badge.hit { color: var(--cov); border-color: color-mix(in srgb, var(--cov) 40%, transparent); }
+.badge.dim { opacity: 0.4; }
+
+#source-view {
+  margin: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 0.6rem 0;
+  overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: clamp(11.5px, 10.5px + 0.2vw, 14.5px);
+  line-height: 1.55;
+  max-height: calc(100vh - var(--stack-h) - var(--footer-h) - 5.5rem);
+}
+.source-line { display: flex; }
+.source-line:hover { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+.line-num {
+  width: 3.4rem; flex: none; text-align: right; padding: 0 0.85rem;
+  color: var(--line-num); user-select: none;
+  border-right: 1px solid var(--border); position: sticky; left: 0; background: var(--surface);
+}
+.line-gutter { width: 3px; flex: none; }
+.line-code { flex: 1; padding: 0 0.85rem; white-space: pre; }
+.line-covered .line-gutter { background: var(--cov); }
+.line-partial .line-gutter { background: var(--part); }
+.line-uncovered .line-gutter { background: var(--unc); }
+.line-covered { background: color-mix(in srgb, var(--cov) 9%, transparent); }
+.line-partial { background: color-mix(in srgb, var(--part) 9%, transparent); }
+.line-uncovered { background: color-mix(in srgb, var(--unc) 9%, transparent); }
+.source-empty { padding: 2rem; text-align: center; color: var(--muted); }
+
+/* syntax */
+.kw { color: #c678dd; }
+.ident { color: #61afef; }
+.lit { color: #d19a66; }
+.str { color: #98c379; }
+.cmt { color: #5c6370; font-style: italic; }
+.op { color: #abb2bf; }
+body.theme-light .kw { color: #8b5cf6; }
+body.theme-light .ident { color: #2563eb; }
+body.theme-light .lit { color: #b45309; }
+body.theme-light .str { color: #15803d; }
+body.theme-light .cmt { color: #6b7280; }
+body.theme-light .op { color: #475569; }
+
+/* ---------- Legend ---------- */
+.legend {
+  display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+  padding: 0.7rem var(--pad-x);
+  border-top: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+  backdrop-filter: blur(10px);
+  font-size: 0.78rem; color: var(--muted);
+  position: sticky;
+  bottom: 0;
+  z-index: 35;
+}
+.legend-label { font-weight: 600; color: var(--text); }
+.legend-bar {
+  width: 180px; height: 9px; border-radius: 999px;
+  background: linear-gradient(90deg, #A9001A 0%, #E67E22 30%, #FFF9A6 55%, #A8E092 65%, #34A853 80%, #0B6A3A 100%);
+}
+.legend-end { color: var(--faint); font-variant-numeric: tabular-nums; }
+.legend-sep { width: 1px; height: 18px; background: var(--border); margin: 0 0.4rem; }
+.legend-chip { display: inline-flex; align-items: center; gap: 0.4rem; }
+.dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.dot-covered { background: var(--cov); }
+.dot-partial { background: var(--part); }
+.dot-uncovered { background: var(--unc); }
+.dot-not-tracked { background: var(--border-strong); }
+
+/* ---------- Responsive: large / ultra-wide screens ---------- */
+@media (min-width: 1700px) {
+  /* Keep readable line lengths on very wide monitors while letting the
+     treemap still use the full width. */
+  .explorer-sidebar { flex-basis: clamp(300px, 22vw, 420px); }
+}
+
+/* ---------- Responsive: tablets ---------- */
+@media (max-width: 860px) {
+  .explorer { flex-direction: column; }
+  .explorer-sidebar {
+    flex: none;
+    width: 100%;
+    position: static;
+    max-height: 42vh;
+    margin-bottom: 0.85rem;
+  }
+  .explorer.sidebar-collapsed .explorer-sidebar { width: 100%; }
+  .explorer-detail { width: 100%; }
+}
+
+@media (max-width: 720px) {
+  .headline-meta { display: none; }
+  .module { max-width: 18ch; }
+  /* Let search take a full row under the controls. */
+  .toolbar { gap: 0.6rem 0.7rem; }
+  .search-box { order: 3; flex: 1 1 100%; max-width: none; }
+}
+
+/* ---------- Responsive: phones ---------- */
+@media (max-width: 540px) {
+  .app-header { gap: 0.6rem; padding: 0.7rem var(--pad-x); }
+  .brand-mark { width: 36px; height: 36px; }
+  .gauge, .gauge svg { width: 46px; height: 46px; }
+  h1 { font-size: 0.98rem; }
+  .module { max-width: 14ch; }
+  .toolbar { padding: 0.6rem var(--pad-x); }
+  /* Compact the run filter + segmented control so they share one row. */
+  .seg { padding: 0.4rem 0.6rem; }
+  .run-trigger { padding: 0.5rem 0.6rem; }
+  .legend { gap: 0.45rem 0.55rem; }
+  .legend-bar { width: 120px; }
+  .legend-sep { display: none; }
+}
+
+@media (max-width: 380px) {
+  /* Reclaim space: drop the gradient legend bar, keep the swatches. */
+  .legend-label, .legend-bar, .legend-end { display: none; }
+  .seg svg { display: none; }
+}
+
+/* scrollbars */
+*::-webkit-scrollbar { width: 11px; height: 11px; }
+*::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; border: 3px solid var(--surface); }
+*::-webkit-scrollbar-track { background: transparent; }
+</style>
+</head>
+<body class="theme-dark">
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3v18h18"></path>
+          <rect x="7" y="11" width="3" height="6" rx="1"></rect>
+          <rect x="12" y="7" width="3" height="10" rx="1"></rect>
+          <rect x="17" y="4" width="3" height="13" rx="1"></rect>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>Coverage Report</h1>
+        <p class="module" id="module-path"></p>
+      </div>
+    </div>
+
+    <div class="headline">
+      <div class="gauge" id="overall-gauge">
+        <svg viewBox="0 0 36 36" width="56" height="56">
+          <circle class="gauge-track" cx="18" cy="18" r="15.5"></circle>
+          <circle class="gauge-fill" id="gauge-arc" cx="18" cy="18" r="15.5"></circle>
+        </svg>
+        <span class="gauge-pct" id="overall-pct">0%</span>
+      </div>
+      <div class="headline-meta">
+        <span class="headline-label">Overall coverage</span>
+        <span class="meta" id="overall-meta"></span>
+      </div>
+    </div>
+
+    <button type="button" id="theme-toggle" class="icon-btn" aria-label="Toggle theme" title="Toggle theme">
+      <svg class="icon-sun" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+    </button>
+  </header>
+
+  <div class="toolbar">
+    <div class="segmented" id="view-selector" role="tablist" aria-label="View mode">
+      <span class="seg-indicator" id="seg-indicator"></span>
+      <button type="button" class="seg" data-view="treemap" role="tab" aria-selected="true">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1"></rect><rect x="13" y="3" width="8" height="5" rx="1"></rect><rect x="13" y="10" width="8" height="11" rx="1"></rect><rect x="3" y="13" width="8" height="8" rx="1"></rect></svg>
+        Treemap
+      </button>
+      <button type="button" class="seg" data-view="files" role="tab" aria-selected="false">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+        Files
+      </button>
+    </div>
+
+    <div class="search-box" id="search-box">
+      <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      <input type="text" id="search-input" placeholder="Filter files…" autocomplete="off" spellcheck="false" aria-label="Filter files">
+      <button type="button" class="search-clear" id="search-clear" aria-label="Clear filter" title="Clear filter" hidden>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"></path></svg>
+      </button>
+      <kbd class="search-hint">/</kbd>
+    </div>
+
+    <div class="run-filter" id="run-filter">
+      <button type="button" class="run-trigger" id="run-trigger" aria-haspopup="true" aria-expanded="false">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M7 12h10M10 18h4"></path></svg>
+        <span id="run-trigger-label">All runs</span>
+        <svg class="chevron" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"></path></svg>
+      </button>
+      <div class="run-menu" id="run-menu" role="menu"></div>
+    </div>
+  </div>
+
+  <main>
+    <section id="view-treemap" class="view active"></section>
+    <section id="view-files" class="view">
+      <div class="explorer" id="explorer">
+        <aside class="explorer-sidebar" id="explorer-sidebar">
+          <div class="explorer-sidebar-head">
+            <button type="button" class="explorer-toggle" id="explorer-toggle" aria-label="Toggle file tree" title="Toggle file tree" aria-expanded="true">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"></path></svg>
+            </button>
+            <span class="explorer-sidebar-title">Files</span>
+            <div class="tree-actions">
+              <button type="button" id="tree-expand">Expand all</button>
+              <button type="button" id="tree-collapse">Collapse all</button>
+            </div>
+          </div>
+          <div class="tree-scroll" id="tree-scroll"></div>
+        </aside>
+        <div class="explorer-detail" id="explorer-detail">
+          <div class="file-head">
+            <div class="file-title">
+              <span class="file-name" id="file-name">Select a file</span>
+              <span class="file-path" id="file-path"></span>
+            </div>
+            <div class="file-stats">
+              <span class="file-pct" id="file-pct"></span>
+              <div id="run-badges" class="run-badges"></div>
+            </div>
+          </div>
+          <pre id="source-view"><code></code></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="legend">
+    <span class="legend-label">Coverage</span>
+    <span class="legend-end">0%</span>
+    <span class="legend-bar" id="legend-bar"></span>
+    <span class="legend-end">100%</span>
+    <span class="legend-sep"></span>
+    <span class="legend-chip"><i class="dot dot-covered"></i>Covered</span>
+    <span class="legend-chip"><i class="dot dot-partial"></i>Partial</span>
+    <span class="legend-chip"><i class="dot dot-uncovered"></i>Uncovered</span>
+    <span class="legend-chip"><i class="dot dot-not-tracked"></i>Not tracked</span>
+  </footer>
+
+  <script type="application/json" id="coverage-data">{"modulePath":"github.com/escu-io/go-report-builder","overallPct":50.078003120124805,"totalStmts":1923,"coveredStmts":963,"runs":[{"id":"run-0","label":"big.out"}],"tree":{"name":"github.com/escu-io/go-report-builder","path":"","isDir":true,"total":1923,"covered":963,"percent":50.078003120124805,"children":[{"name":"example.com","path":"example.com","isDir":true,"total":1923,"covered":963,"percent":50.078003120124805,"children":[{"name":"m","path":"example.com/m","isDir":true,"total":1923,"covered":963,"percent":50.078003120124805,"children":[{"name":"pkg00","path":"example.com/m/pkg00","isDir":true,"total":3,"covered":3,"percent":100,"children":[{"name":"file0.go","path":"example.com/m/pkg00/file0.go","isDir":false,"total":3,"covered":3,"percent":100,"children":null}]},{"name":"pkg01","path":"example.com/m/pkg01","isDir":true,"total":12,"covered":6,"percent":50,"children":[{"name":"file0.go","path":"example.com/m/pkg01/file0.go","isDir":false,"total":6,"covered":0,"percent":0,"children":null},{"name":"file1.go","path":"example.com/m/pkg01/file1.go","isDir":false,"total":6,"covered":6,"percent":100,"children":null}]},{"name":"pkg02","path":"example.com/m/pkg02","isDir":true,"total":27,"covered":18,"percent":66.66666666666666,"children":[{"name":"file0.go","path":"example.com/m/pkg02/file0.go","isDir":false,"total":9,"covered":9,"percent":100,"children":null},{"name":"file1.go","path":"example.com/m/pkg02/file1.go","isDir":false,"total":9,"covered":0,"percent":0,"children":null},{"name":"file2.go","path":"example.com/m/pkg02/file2.go","isDir":false,"total":9,"covered":9,"percent":100,"children":null}]},{"name":"pkg03","path":"example.com/m/pkg03","isDir":true,"total":12,"covered":0,"percent":0,"children":[{"name":"file0.go","path":"example.com/m/pkg03/file0.go","isDir":false,"total":12,"covered":0,"percent":0,"children":null}]},{"name":"pkg04","path":"example.com/m/pkg04","isDir":true,"total":30,"covered":15,"percent":50,"children":[{"name":"file0.go","path":"example.com/m/pkg04/file0.go","isDir":false,"total":15,"covered":15,"percent":100,"children":null},{"name":"file1.go","path":"example.com/m/pkg04/file1.go","isDir":false,"total":15,"covered":0,"percent":0,"children":null}]},{"name":"pkg05","path":"example.com/m/pkg05","isDir":true,"total":54,"covered":18,"percent":33.33333333333333,"children":[{"name":"file0.go","path":"example.com/m/pkg05/file0.go","isDir":false,"total":18,"covered":0,"percent":0,"children":null},{"name":"file1.go","path":"example.com/m/pkg05/file1.go","isDir":false,"total":18,"covered":18,"percent":100,"children":null},{"name":"file2.go","path":"example.com/m/pkg05/file2.go","isDir":false,"total":18,"covered":0,"percent":0,"children":null}]},{"name":"pkg06","path":"example.com/m/pkg06","isDir":true,"total":21,"covered":21,"percent":100,"children":[{"name":"file0.go","path":"example.com/m/pkg06/file0.go","isDir":false,"total":21,"covered":21,"percent":100,"children":null}]},{"name":"pkg07","path":"example.com/m/pkg07","isDir":true,"total":48,"covered":24,"percent":50,"children":[{"name":"file0.go","path":"example.com/m/pkg07/file0.go","isDir":false,"total":24,"covered":0,"percent":0,"children":null},{"name":"file1.go","path":"example.com/m/pkg07/file1.go","isDir":false,"total":24,"covered":24,"percent":100,"children":null}]},{"name":"pkg08","path":"example.com/m/pkg08","isDir":true,"total":81,"covered":54,"percent":66.66666666666666,"children":[{"name":"file0.go","path":"example.com/m/pkg08/file0.go","isDir":false,"total":27,"covered":27,"percent":100,"children":null},{"name":"file1.go","path":"example.com/m/pkg08/file1.go","isDir":false,"total":27,"covered":0,"percent":0,"children":null},{"name":"file2.go","path":"example.com/m/pkg08/file2.go","isDir":false,"total":27,"covered":27,"percent":100,"children":null}]},{"name":"pkg09","path":"example.com/m/pkg09","isDir":true,"total":30,"covered":0,"percent":0,"children":[{"name":"file0.go","path":"example.com/m/pkg09/file0.go","isDir":false,"total":30,"covered":0,"percent":0,"children":null}]},{"name":"pkg10","path":"example.com/m/pkg10","isDir":true,"total":66,"covered":33,"percent":50,"children":[{"name":"file0.go","path":"example.com/m/pkg10/file0.go","isDir":false,"total":33,"covered":33,"percent":100,"children":null},{"name":"file1.go","path":"example.com/m/pkg10/file1.go","isDir":false,"total":33,"covered":0,"percent":0,"children":null}]},{"name":"pkg11","path":"example.com/m/pkg11","isDir":true,"total":108,"covered":36,"percent":33.33333333333333,"children":[{"name":"file0.go","path":"example.com/m/pkg11/file0.go","isDir":false,"total":36,"covered":0,"percent":0,"children":null},{"name":"file1.go","path":"example.com/m/pkg11/file1.go","isDir":false,"total":36,"covered":36,"percent":100,"children":null},{"name":"file2.go","path":"example.com/m/pkg11/file2.go","isDir":false,"total":36,"covered":0,"percent":0,"children":null}]},{"name":"pkg12","path":"example.com/m/pkg12","isDir":true,"total":39,"covered":39,"percent":100,"children":[{"name":"file0.go","path":"example.com/m/pkg12/file0.go","isDir":false,"total":39,"covered":39,"percent":100,"children":null}]},{"name":"pkg13","path":"example.com/m/pkg13","isDir":true,"total":84,"covered":42,"percent":50,"children":[{"name":"file0.go","path":"example.com/m/pkg13/file0.go","isDir":false,"total":42,"covered":0,"percent":0,"children":null},{"name":"file1.go","path":"example.com/m/pkg13/file1.go","isDir":false,"total":42,"covered":42,"percent":100,"children":null}]},{"name":"pkg14","path":"example.com/m/pkg14","isDir":true,"total":135,"covered":90,"percent":66.66666666666666,"children":[{"name":"file0.go","path":"example.com/m/pkg14/file0.go","isDir":false,"total":45,"covered":45,"percent":100,"children":null},{"name":"file1.go","path":"example.com/m/pkg14/file1.go","isDir":false,"total":45,"covered":0,"percent":0,"children":null},{"name":"file2.go","path":"example.com/m/pkg14/file2.go","isDir":false,"total":45,"covered":45,"percent":100,"children":null}]},{"name":"pkg15","path":"example.com/m/pkg15","isDir":true,"total":48,"covered":0,"percent":0,"children":[{"name":"file0.go","path":"example.com/m/pkg15/file0.go","isDir":false,"total":48,"covered":0,"percent":0,"children":null}]},{"name":"pkg16","path":"example.com/m/pkg16","isDir":true,"total":102,"covered":51,"percent":50,"children":[{"name":"file0.go","path":"example.com/m/pkg16/file0.go","isDir":false,"total":51,"covered":51,"percent":100,"children":null},{"name":"file1.go","path":"example.com/m/pkg16/file1.go","isDir":false,"total":51,"covered":0,"percent":0,"children":null}]},{"name":"pkg17","path":"example.com/m/pkg17","isDir":true,"total":162,"covered":54,"percent":33.33333333333333,"children":[{"name":"file0.go","path":"example.com/m/pkg17/file0.go","isDir":false,"total":54,"covered":0,"percent":0,"children":null},{"name":"file1.go","path":"example.com/m/pkg17/file1.go","isDir":false,"total":54,"covered":54,"percent":100,"children":null},{"name":"file2.go","path":"example.com/m/pkg17/file2.go","isDir":false,"total":54,"covered":0,"percent":0,"children":null}]},{"name":"pkg18","path":"example.com/m/pkg18","isDir":true,"total":57,"covered":57,"percent":100,"children":[{"name":"file0.go","path":"example.com/m/pkg18/file0.go","isDir":false,"total":57,"covered":57,"percent":100,"children":null}]},{"name":"pkg19","path":"example.com/m/pkg19","isDir":true,"total":120,"covered":60,"percent":50,"children":[{"name":"file0.go","path":"example.com/m/pkg19/file0.go","isDir":false,"total":60,"covered":0,"percent":0,"children":null},{"name":"file1.go","path":"example.com/m/pkg19/file1.go","isDir":false,"total":60,"covered":60,"percent":100,"children":null}]},{"name":"pkg20","path":"example.com/m/pkg20","isDir":true,"total":189,"covered":126,"percent":66.66666666666666,"children":[{"name":"file0.go","path":"example.com/m/pkg20/file0.go","isDir":false,"total":63,"covered":63,"percent":100,"children":null},{"name":"file1.go","path":"example.com/m/pkg20/file1.go","isDir":false,"total":63,"covered":0,"percent":0,"children":null},{"name":"file2.go","path":"example.com/m/pkg20/file2.go","isDir":false,"total":63,"covered":63,"percent":100,"children":null}]},{"name":"pkg21","path":"example.com/m/pkg21","isDir":true,"total":66,"covered":0,"percent":0,"children":[{"name":"file0.go","path":"example.com/m/pkg21/file0.go","isDir":false,"total":66,"covered":0,"percent":0,"children":null}]},{"name":"pkg22","path":"example.com/m/pkg22","isDir":true,"total":138,"covered":69,"percent":50,"children":[{"name":"file0.go","path":"example.com/m/pkg22/file0.go","isDir":false,"total":69,"covered":69,"percent":100,"children":null},{"name":"file1.go","path":"example.com/m/pkg22/file1.go","isDir":false,"total":69,"covered":0,"percent":0,"children":null}]},{"name":"pkg23","path":"example.com/m/pkg23","isDir":true,"total":216,"covered":72,"percent":33.33333333333333,"children":[{"name":"file0.go","path":"example.com/m/pkg23/file0.go","isDir":false,"total":72,"covered":0,"percent":0,"children":null},{"name":"file1.go","path":"example.com/m/pkg23/file1.go","isDir":false,"total":72,"covered":72,"percent":100,"children":null},{"name":"file2.go","path":"example.com/m/pkg23/file2.go","isDir":false,"total":72,"covered":0,"percent":0,"children":null}]},{"name":"pkg24","path":"example.com/m/pkg24","isDir":true,"total":75,"covered":75,"percent":100,"children":[{"name":"file0.go","path":"example.com/m/pkg24/file0.go","isDir":false,"total":75,"covered":75,"percent":100,"children":null}]}]}]}]},"files":{"example.com/m/pkg00/file0.go":{"importPath":"example.com/m/pkg00/file0.go","relPath":"example.com/m/pkg00/file0.go","totalStmts":3,"coveredStmts":3,"percent":100,"runCoverage":{"run-0":true}},"example.com/m/pkg01/file0.go":{"importPath":"example.com/m/pkg01/file0.go","relPath":"example.com/m/pkg01/file0.go","totalStmts":6,"coveredStmts":0,"percent":0,"runCoverage":{}},"example.com/m/pkg01/file1.go":{"importPath":"example.com/m/pkg01/file1.go","relPath":"example.com/m/pkg01/file1.go","totalStmts":6,"coveredStmts":6,"percent":100,"runCoverage":{"run-0":true}},"example.com/m/pkg02/file0.go":{"importPath":"example.com/m/pkg02/file0.go","relPath":"example.com/m/pkg02/file0.go","totalStmts":9,"coveredStmts":9,"percent":100,"runCoverage":{"run-0":true}},"example.com/m/pkg02/file1.go":{"importPath":"example.com/m/pkg02/file1.go","relPath":"example.com/m/pkg02/file1.go","totalStmts":9,"coveredStmts":0,"percent":0,"runCoverage":{}},"example.com/m/pkg02/file2.go":{"importPath":"example.com/m/pkg02/file2.go","relPath":"example.com/m/pkg02/file2.go","totalStmts":9,"coveredStmts":9,"percent":100,"runCoverage":{"run-0":true}},"example.com/m/pkg03/file0.go":{"importPath":"example.com/m/pkg03/file0.go","relPath":"example.com/m/pkg03/file0.go","totalStmts":12,"coveredStmts":0,"percent":0,"runCoverage":{}},"example.com/m/pkg04/file0.go":{"importPath":"example.com/m/pkg04/file0.go","relPath":"example.com/m/pkg04/file0.go","totalStmts":15,"coveredStmts":15,"percent":100,"runCoverage":{"run-0":true}},"example.com/m/pkg04/file1.go":{"importPath":"example.com/m/pkg04/file1.go","relPath":"example.com/m/pkg04/file1.go","totalStmts":15,"coveredStmts":0,"percent":0,"runCoverage":{}},"example.com/m/pkg05/file0.go":{"importPath":"example.com/m/pkg05/file0.go","relPath":"example.com/m/pkg05/file0.go","totalStmts":18,"coveredStmts":0,"percent":0,"runCoverage":{}},"example.com/m/pkg05/file1.go":{"importPath":"example.com/m/pkg05/file1.go","relPath":"example.com/m/pkg05/file1.go","totalStmts":18,"coveredStmts":18,"percent":100,"runCoverage":{"run-0":true}},"example.com/m/pkg05/file2.go":{"importPath":"example.com/m/pkg05/file2.go","relPath":"example.com/m/pkg05/file2.go","totalStmts":18,"coveredStmts":0,"percent":0,"runCoverage":{}},"example.com/m/pkg06/file0.go":{"importPath":"example.com/m/pkg06/file0.go","relPath":"example.com/m/pkg06/file0.go","totalStmts":21,"coveredStmts":21,"percent":100,"runCoverage":{"run-0":true}},"example.com/m/pkg07/file0.go":{"importPath":"example.com/m/pkg07/file0.go","relPath":"example.com/m/pkg07/file0.go","totalStmts":24,"coveredStmts":0,"percent":0,"runCoverage":{}},"example.com/m/pkg07/file1.go":{"importPath":"example.com/m/pkg07/file1.go","relPath":"example.com/m/pkg07/file1.go","totalStmts":24,"coveredStmts":24,"percent":100,"runCoverage":{"run-0":true}},"example.com/m/pkg08/file0.go":{"importPath":"example.com/m/pkg08/file0.go","relPath":"example.com/m/pkg08/file0.go","totalStmts":27,"coveredStmts":27,"percent":100,"runCoverage":{"run-0":true}},"example.com/m/pkg08/file1.go":{"importPath":"example.com/m/pkg08/file1.go","relPath":"example.com/m/pkg08/file1.go","totalStmts":27,"coveredStmts":0,"percent":0,"runCoverage":{}},"example.com/m/pkg08/file2.go":{"importPath":"example.com/m/pkg08/file2.go","relPath":"example.com/m/pkg08/file2.go","totalStmts":27,"coveredStmts":27,"percent":100,"runCoverage":{"run-0":true}},"example.com/m/pkg09/file0.go":{"importPath":"example.com/m/pkg09/file0.go","relPath":"example.com/m/pkg09/file0.go","totalStmts":30,"coveredStmts":0,"percent":0,"runCoverage":{}},"example.com/m/pkg10/file0.go":{"importPath":"example.com/m/pkg10/file0.go","relPath":"example.com/m/pkg10/file0.go","totalStmts":33,"coveredStmts":33,"percent":100,"runCoverage":{"run-0":true}},"example.com/m/pkg10/file1.go":{"importPath":"example.com/m/pkg10/file1.go","relPath":"example.com/m/pkg10/file1.go","totalStmts":33,"coveredStmts":0,"percent":0,"runCoverage":{}},"example.com/m/pkg11/file0.go":{"importPath":"example.com/m/pkg11/file0.go","relPath":"example.com/m/pkg11/file0.go","totalStmts":36,"coveredStmts":0,"percent":0,"runCoverage":{}},"example.com/m/pkg11/file1.go":{"importPath":"example.com/m/pkg11/file1.go","relPath":"example.com/m/pkg11/file1.go","totalStmts":36,"coveredStmts":36,"percent":100,"runCoverage":{"run-0":true}},"example.com/m/pkg11/file2.go":{"importPath":"example.com/m/pkg11/file2.go","relPath":"example.com/m/pkg11/file2.go","totalStmts":36,"coveredStmts":0,"percent":0,"runCoverage":{}},"example.com/m/pkg12/file0.go":{"importPath":"example.com/m/pkg12/file0.go","relPath":"example.com/m/pkg12/file0.go","totalStmts":39,"coveredStmts":39,"percent":100,"runCoverage":{"run-0":true}},"example.com/m/pkg13/file0.go":{"importPath":"example.com/m/pkg13/file0.go","relPath":"example.com/m/pkg13/file0.go","totalStmts":42,"coveredStmts":0,"percent":0,"runCoverage":{}},"example.com/m/pkg13/file1.go":{"importPath":"example.com/m/pkg13/file1.go","relPath":"example.com/m/pkg13/file1.go","totalStmts":42,"coveredStmts":42,"percent":100,"runCoverage":{"run-0":true}},"example.com/m/pkg14/file0.go":{"importPath":"example.com/m/pkg14/file0.go","relPath":"example.com/m/pkg14/file0.go","totalStmts":45,"coveredStmts":45,"percent":100,"runCoverage":{"run-0":true}},"example.com/m/pkg14/file1.go":{"importPath":"example.com/m/pkg14/file1.go","relPath":"example.com/m/pkg14/file1.go","totalStmts":45,"coveredStmts":0,"percent":0,"runCoverage":{}},"example.com/m/pkg14/file2.go":{"importPath":"example.com/m/pkg14/file2.go","relPath":"example.com/m/pkg14/file2.go","totalStmts":45,"coveredStmts":45,"percent":100,"runCoverage":{"run-0":true}},"example.com/m/pkg15/file0.go":{"importPath":"example.com/m/pkg15/file0.go","relPath":"example.com/m/pkg15/file0.go","totalStmts":48,"coveredStmts":0,"percent":0,"runCoverage":{}},"example.com/m/pkg16/file0.go":{"importPath":"example.com/m/pkg16/file0.go","relPath":"example.com/m/pkg16/file0.go","totalStmts":51,"coveredStmts":51,"percent":100,"runCoverage":{"run-0":true}},"example.com/m/pkg16/file1.go":{"importPath":"example.com/m/pkg16/file1.go","relPath":"example.com/m/pkg16/file1.go","totalStmts":51,"coveredStmts":0,"percent":0,"runCoverage":{}},"example.com/m/pkg17/file0.go":{"importPath":"example.com/m/pkg17/file0.go","relPath":"example.com/m/pkg17/file0.go","totalStmts":54,"coveredStmts":0,"percent":0,"runCoverage":{}},"example.com/m/pkg17/file1.go":{"importPath":"example.com/m/pkg17/file1.go","relPath":"example.com/m/pkg17/file1.go","totalStmts":54,"coveredStmts":54,"percent":100,"runCoverage":{"run-0":true}},"example.com/m/pkg17/file2.go":{"importPath":"example.com/m/pkg17/file2.go","relPath":"example.com/m/pkg17/file2.go","totalStmts":54,"coveredStmts":0,"percent":0,"runCoverage":{}},"example.com/m/pkg18/file0.go":{"importPath":"example.com/m/pkg18/file0.go","relPath":"example.com/m/pkg18/file0.go","totalStmts":57,"coveredStmts":57,"percent":100,"runCoverage":{"run-0":true}},"example.com/m/pkg19/file0.go":{"importPath":"example.com/m/pkg19/file0.go","relPath":"example.com/m/pkg19/file0.go","totalStmts":60,"coveredStmts":0,"percent":0,"runCoverage":{}},"example.com/m/pkg19/file1.go":{"importPath":"example.com/m/pkg19/file1.go","relPath":"example.com/m/pkg19/file1.go","totalStmts":60,"coveredStmts":60,"percent":100,"runCoverage":{"run-0":true}},"example.com/m/pkg20/file0.go":{"importPath":"example.com/m/pkg20/file0.go","relPath":"example.com/m/pkg20/file0.go","totalStmts":63,"coveredStmts":63,"percent":100,"runCoverage":{"run-0":true}},"example.com/m/pkg20/file1.go":{"importPath":"example.com/m/pkg20/file1.go","relPath":"example.com/m/pkg20/file1.go","totalStmts":63,"coveredStmts":0,"percent":0,"runCoverage":{}},"example.com/m/pkg20/file2.go":{"importPath":"example.com/m/pkg20/file2.go","relPath":"example.com/m/pkg20/file2.go","totalStmts":63,"coveredStmts":63,"percent":100,"runCoverage":{"run-0":true}},"example.com/m/pkg21/file0.go":{"importPath":"example.com/m/pkg21/file0.go","relPath":"example.com/m/pkg21/file0.go","totalStmts":66,"coveredStmts":0,"percent":0,"runCoverage":{}},"example.com/m/pkg22/file0.go":{"importPath":"example.com/m/pkg22/file0.go","relPath":"example.com/m/pkg22/file0.go","totalStmts":69,"coveredStmts":69,"percent":100,"runCoverage":{"run-0":true}},"example.com/m/pkg22/file1.go":{"importPath":"example.com/m/pkg22/file1.go","relPath":"example.com/m/pkg22/file1.go","totalStmts":69,"coveredStmts":0,"percent":0,"runCoverage":{}},"example.com/m/pkg23/file0.go":{"importPath":"example.com/m/pkg23/file0.go","relPath":"example.com/m/pkg23/file0.go","totalStmts":72,"coveredStmts":0,"percent":0,"runCoverage":{}},"example.com/m/pkg23/file1.go":{"importPath":"example.com/m/pkg23/file1.go","relPath":"example.com/m/pkg23/file1.go","totalStmts":72,"coveredStmts":72,"percent":100,"runCoverage":{"run-0":true}},"example.com/m/pkg23/file2.go":{"importPath":"example.com/m/pkg23/file2.go","relPath":"example.com/m/pkg23/file2.go","totalStmts":72,"coveredStmts":0,"percent":0,"runCoverage":{}},"example.com/m/pkg24/file0.go":{"importPath":"example.com/m/pkg24/file0.go","relPath":"example.com/m/pkg24/file0.go","totalStmts":75,"coveredStmts":75,"percent":100,"runCoverage":{"run-0":true}}},"fileDetails":{"example.com/m/pkg00/file0.go":{"importPath":"example.com/m/pkg00/file0.go","relPath":"example.com/m/pkg00/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg01/file0.go":{"importPath":"example.com/m/pkg01/file0.go","relPath":"example.com/m/pkg01/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg01/file1.go":{"importPath":"example.com/m/pkg01/file1.go","relPath":"example.com/m/pkg01/file1.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg02/file0.go":{"importPath":"example.com/m/pkg02/file0.go","relPath":"example.com/m/pkg02/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg02/file1.go":{"importPath":"example.com/m/pkg02/file1.go","relPath":"example.com/m/pkg02/file1.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg02/file2.go":{"importPath":"example.com/m/pkg02/file2.go","relPath":"example.com/m/pkg02/file2.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg03/file0.go":{"importPath":"example.com/m/pkg03/file0.go","relPath":"example.com/m/pkg03/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg04/file0.go":{"importPath":"example.com/m/pkg04/file0.go","relPath":"example.com/m/pkg04/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg04/file1.go":{"importPath":"example.com/m/pkg04/file1.go","relPath":"example.com/m/pkg04/file1.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg05/file0.go":{"importPath":"example.com/m/pkg05/file0.go","relPath":"example.com/m/pkg05/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg05/file1.go":{"importPath":"example.com/m/pkg05/file1.go","relPath":"example.com/m/pkg05/file1.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg05/file2.go":{"importPath":"example.com/m/pkg05/file2.go","relPath":"example.com/m/pkg05/file2.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg06/file0.go":{"importPath":"example.com/m/pkg06/file0.go","relPath":"example.com/m/pkg06/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg07/file0.go":{"importPath":"example.com/m/pkg07/file0.go","relPath":"example.com/m/pkg07/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg07/file1.go":{"importPath":"example.com/m/pkg07/file1.go","relPath":"example.com/m/pkg07/file1.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg08/file0.go":{"importPath":"example.com/m/pkg08/file0.go","relPath":"example.com/m/pkg08/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg08/file1.go":{"importPath":"example.com/m/pkg08/file1.go","relPath":"example.com/m/pkg08/file1.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg08/file2.go":{"importPath":"example.com/m/pkg08/file2.go","relPath":"example.com/m/pkg08/file2.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg09/file0.go":{"importPath":"example.com/m/pkg09/file0.go","relPath":"example.com/m/pkg09/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg10/file0.go":{"importPath":"example.com/m/pkg10/file0.go","relPath":"example.com/m/pkg10/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg10/file1.go":{"importPath":"example.com/m/pkg10/file1.go","relPath":"example.com/m/pkg10/file1.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg11/file0.go":{"importPath":"example.com/m/pkg11/file0.go","relPath":"example.com/m/pkg11/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg11/file1.go":{"importPath":"example.com/m/pkg11/file1.go","relPath":"example.com/m/pkg11/file1.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg11/file2.go":{"importPath":"example.com/m/pkg11/file2.go","relPath":"example.com/m/pkg11/file2.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg12/file0.go":{"importPath":"example.com/m/pkg12/file0.go","relPath":"example.com/m/pkg12/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg13/file0.go":{"importPath":"example.com/m/pkg13/file0.go","relPath":"example.com/m/pkg13/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg13/file1.go":{"importPath":"example.com/m/pkg13/file1.go","relPath":"example.com/m/pkg13/file1.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg14/file0.go":{"importPath":"example.com/m/pkg14/file0.go","relPath":"example.com/m/pkg14/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg14/file1.go":{"importPath":"example.com/m/pkg14/file1.go","relPath":"example.com/m/pkg14/file1.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg14/file2.go":{"importPath":"example.com/m/pkg14/file2.go","relPath":"example.com/m/pkg14/file2.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg15/file0.go":{"importPath":"example.com/m/pkg15/file0.go","relPath":"example.com/m/pkg15/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg16/file0.go":{"importPath":"example.com/m/pkg16/file0.go","relPath":"example.com/m/pkg16/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg16/file1.go":{"importPath":"example.com/m/pkg16/file1.go","relPath":"example.com/m/pkg16/file1.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg17/file0.go":{"importPath":"example.com/m/pkg17/file0.go","relPath":"example.com/m/pkg17/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg17/file1.go":{"importPath":"example.com/m/pkg17/file1.go","relPath":"example.com/m/pkg17/file1.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg17/file2.go":{"importPath":"example.com/m/pkg17/file2.go","relPath":"example.com/m/pkg17/file2.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg18/file0.go":{"importPath":"example.com/m/pkg18/file0.go","relPath":"example.com/m/pkg18/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg19/file0.go":{"importPath":"example.com/m/pkg19/file0.go","relPath":"example.com/m/pkg19/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg19/file1.go":{"importPath":"example.com/m/pkg19/file1.go","relPath":"example.com/m/pkg19/file1.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg20/file0.go":{"importPath":"example.com/m/pkg20/file0.go","relPath":"example.com/m/pkg20/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg20/file1.go":{"importPath":"example.com/m/pkg20/file1.go","relPath":"example.com/m/pkg20/file1.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg20/file2.go":{"importPath":"example.com/m/pkg20/file2.go","relPath":"example.com/m/pkg20/file2.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg21/file0.go":{"importPath":"example.com/m/pkg21/file0.go","relPath":"example.com/m/pkg21/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg22/file0.go":{"importPath":"example.com/m/pkg22/file0.go","relPath":"example.com/m/pkg22/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg22/file1.go":{"importPath":"example.com/m/pkg22/file1.go","relPath":"example.com/m/pkg22/file1.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg23/file0.go":{"importPath":"example.com/m/pkg23/file0.go","relPath":"example.com/m/pkg23/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg23/file1.go":{"importPath":"example.com/m/pkg23/file1.go","relPath":"example.com/m/pkg23/file1.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg23/file2.go":{"importPath":"example.com/m/pkg23/file2.go","relPath":"example.com/m/pkg23/file2.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]},"example.com/m/pkg24/file0.go":{"importPath":"example.com/m/pkg24/file0.go","relPath":"example.com/m/pkg24/file0.go","lines":[{"num":0,"state":"not-tracked","html":"\u003cspan class=\"cmt\"\u003e// source unavailable\u003c/span\u003e"}]}},"colors":{"name":"default","min":"#ef4444","mid":"#f59e0b","max":"#22c55e"}}</script>
+  <script>(function () {
+  'use strict';
+
+  const data = JSON.parse(document.getElementById('coverage-data').textContent);
+  const colors = data.colors || { min: '#ef4444', mid: '#f59e0b', max: '#22c55e' };
+  const GAUGE_CIRC = 2 * Math.PI * 15.5;
+
+  /* ---------- persisted UI state ----------
+   * Remember the theme, active view and selected file across reloads so the
+   * report reopens exactly where the user left off. Keyed by module path so
+   * different reports don't clobber each other's state. Wrapped in try/catch
+   * because localStorage can be unavailable (file://, private mode, etc.). */
+  const STORE_KEY = 'go-report-builder:' + (data.modulePath || '.');
+  function loadState() {
+    try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; }
+    catch (e) { return {}; }
+  }
+  function saveState(patch) {
+    try {
+      const next = Object.assign(loadState(), patch);
+      localStorage.setItem(STORE_KEY, JSON.stringify(next));
+    } catch (e) { /* storage unavailable — state just won't persist */ }
+  }
+  const savedState = loadState();
+
+  // Restore the run filter, keeping only run ids that still exist; fall back to
+  // "all runs" when nothing valid was stored.
+  const validRunIds = new Set(data.runs.map(r => r.id));
+  const savedRuns = Array.isArray(savedState.runs)
+    ? savedState.runs.filter(id => validRunIds.has(id)) : null;
+  let activeRuns = (savedRuns && savedRuns.length)
+    ? new Set(savedRuns) : new Set(data.runs.map(r => r.id));
+  let treemapStack = [data.tree];
+  let selectedFile = (savedState.selectedFile && data.files[savedState.selectedFile])
+    ? savedState.selectedFile : null;
+  let currentView = savedState.view === 'files' ? 'files' : 'treemap';
+  let treeQuery = typeof savedState.query === 'string' ? savedState.query : '';
+  let visibleFileRows = []; // { path, row } in DOM order, for keyboard nav
+
+  const els = {
+    modulePath: document.getElementById('module-path'),
+    overallPct: document.getElementById('overall-pct'),
+    overallMeta: document.getElementById('overall-meta'),
+    gaugeArc: document.getElementById('gauge-arc'),
+    themeToggle: document.getElementById('theme-toggle'),
+    viewSelector: document.getElementById('view-selector'),
+    segIndicator: document.getElementById('seg-indicator'),
+    views: {
+      treemap: document.getElementById('view-treemap'),
+      files: document.getElementById('view-files'),
+    },
+    explorer: document.getElementById('explorer'),
+    explorerSidebar: document.getElementById('explorer-sidebar'),
+    explorerToggle: document.getElementById('explorer-toggle'),
+    fileHead: document.querySelector('#explorer-detail .file-head'),
+    treeScroll: document.getElementById('tree-scroll'),
+    treeExpand: document.getElementById('tree-expand'),
+    treeCollapse: document.getElementById('tree-collapse'),
+    searchBox: document.getElementById('search-box'),
+    searchInput: document.getElementById('search-input'),
+    searchClear: document.getElementById('search-clear'),
+    runFilter: document.getElementById('run-filter'),
+    runTrigger: document.getElementById('run-trigger'),
+    runTriggerLabel: document.getElementById('run-trigger-label'),
+    runMenu: document.getElementById('run-menu'),
+    fileName: document.getElementById('file-name'),
+    filePath: document.getElementById('file-path'),
+    filePct: document.getElementById('file-pct'),
+    runBadges: document.getElementById('run-badges'),
+    sourceView: document.querySelector('#source-view code'),
+    header: document.querySelector('.app-header'),
+    toolbar: document.querySelector('.toolbar'),
+    footer: document.querySelector('.legend'),
+  };
+
+  /* ---------- responsive layout metrics ---------- */
+  // Mirror the live heights of the sticky chrome (header / toolbar / footer)
+  // into CSS variables so sticky offsets and scroll-area heights stay correct
+  // no matter how the fluid fonts or wrapping change those heights.
+  function syncLayoutVars() {
+    const root = document.documentElement.style;
+    if (els.header) root.setProperty('--header-h', els.header.offsetHeight + 'px');
+    if (els.toolbar) root.setProperty('--toolbar-h', els.toolbar.offsetHeight + 'px');
+    if (els.footer) root.setProperty('--footer-h', els.footer.offsetHeight + 'px');
+  }
+
+  /* ---------- color helpers ---------- */
+  function pctColor(pct) {
+    const t = Math.max(0, Math.min(100, pct)) / 100;
+    return t <= 0.5
+      ? lerpColor(colors.min, colors.mid, t * 2)
+      : lerpColor(colors.mid, colors.max, (t - 0.5) * 2);
+  }
+  function lerpColor(a, b, t) {
+    const pa = hexToRgb(a), pb = hexToRgb(b);
+    const r = Math.round(pa.r + (pb.r - pa.r) * t);
+    const g = Math.round(pa.g + (pb.g - pa.g) * t);
+    const bl = Math.round(pa.b + (pb.b - pa.b) * t);
+    return `rgb(${r},${g},${bl})`;
+  }
+  function hexToRgb(hex) {
+    const h = hex.replace('#', '');
+    return { r: parseInt(h.slice(0, 2), 16), g: parseInt(h.slice(2, 4), 16), b: parseInt(h.slice(4, 6), 16) };
+  }
+  function formatPct(n) { return (Math.round(n * 10) / 10).toFixed(1) + '%'; }
+  function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  // Multi-stop coverage gradient for the treemap: a rich red→orange→pale-yellow→
+  // light-green→medium-green→dark-green ramp where each band maps to a coverage
+  // range, so every intermediate percentage gets its own shade.
+  const TM_STOPS = [
+    { p: 0.00, c: '#A9001A' },   // deep red — lowest / 0%
+    { p: 0.30, c: '#E67E22' },   // orange — low-mid
+    { p: 0.55, c: '#FFF9A6' },   // pale yellow — mid-range
+    { p: 0.65, c: '#A8E092' },   // light green — lower-green / container fill
+    { p: 0.80, c: '#34A853' },   // medium green — standard high
+    { p: 1.00, c: '#0B6A3A' },   // dark green — highest / 90%+
+  ];
+  function tmRgb(pct) {
+    const t = Math.max(0, Math.min(100, pct)) / 100;
+    let lo = TM_STOPS[0], hi = TM_STOPS[TM_STOPS.length - 1];
+    for (let i = 0; i < TM_STOPS.length - 1; i++) {
+      if (t >= TM_STOPS[i].p && t <= TM_STOPS[i + 1].p) {
+        lo = TM_STOPS[i]; hi = TM_STOPS[i + 1]; break;
+      }
+    }
+    const span = hi.p - lo.p;
+    const local = span > 0 ? (t - lo.p) / span : 0;
+    const a = hexToRgb(lo.c), b = hexToRgb(hi.c);
+    return {
+      r: Math.round(a.r + (b.r - a.r) * local),
+      g: Math.round(a.g + (b.g - a.g) * local),
+      b: Math.round(a.b + (b.b - a.b) * local),
+    };
+  }
+  function tmColor(pct) {
+    const c = tmRgb(pct);
+    return `rgb(${c.r},${c.g},${c.b})`;
+  }
+  // A stronger (darker) shade of the same gradient color, used for the borders /
+  // margins so each box reads as enclosed by a richer version of its own color.
+  function tmStrong(pct) {
+    const c = tmRgb(pct);
+    const k = 0.62; // darken toward black
+    return `rgb(${Math.round(c.r * k)},${Math.round(c.g * k)},${Math.round(c.b * k)})`;
+  }
+
+  /* ---------- coverage computation (run filtered) ---------- */
+  function allRunsActive() { return activeRuns.size === data.runs.length; }
+
+  function fileCoveredStmts(file) {
+    if (allRunsActive()) return file.coveredStmts;
+    if (activeRuns.size === 0) return 0;
+    const activeCount = [...activeRuns].filter(id => file.runCoverage[id]).length;
+    if (activeCount === 0) return 0;
+    if (activeCount === data.runs.length) return file.coveredStmts;
+    return Math.round(file.coveredStmts * (activeCount / data.runs.length));
+  }
+
+  function filterTree(node) {
+    if (!node.isDir) {
+      const file = data.files[node.path];
+      if (!file) return null;
+      const covered = fileCoveredStmts(file);
+      const total = file.totalStmts;
+      return { ...node, orig: node, covered, total, percent: total > 0 ? (covered / total) * 100 : 0 };
+    }
+    const children = (node.children || []).map(filterTree).filter(Boolean);
+    if (!children.length && node.path !== '') return null;
+    let total = 0, covered = 0;
+    children.forEach(c => { total += c.total; covered += c.covered; });
+    return { ...node, orig: node, children, total, covered, percent: total > 0 ? (covered / total) * 100 : 0 };
+  }
+
+  function overallStats() {
+    const root = filterTree(data.tree) || data.tree;
+    return { covered: root.covered || 0, total: root.total || 0, percent: root.percent || 0 };
+  }
+
+  // Prune a (run-filtered) tree down to the nodes matching the live text query,
+  // recomputing directory totals so treemap box sizes reflect only matches.
+  // Returns null when nothing matches. With no query, returns the node as-is.
+  function pruneTreeByQuery(node) {
+    if (!treeQuery) return node;
+    if (!node.isDir) return fileMatch(node) ? node : null;
+    const children = (node.children || []).map(pruneTreeByQuery).filter(Boolean);
+    if (!children.length) return null;
+    let total = 0, covered = 0;
+    children.forEach(c => { total += c.total; covered += c.covered; });
+    return { ...node, children, total, covered, percent: total > 0 ? (covered / total) * 100 : 0 };
+  }
+
+  /* ---------- header ---------- */
+  function setGauge(pct) {
+    els.gaugeArc.style.strokeDashoffset = GAUGE_CIRC * (1 - Math.max(0, Math.min(100, pct)) / 100);
+    els.gaugeArc.style.stroke = pctColor(pct);
+  }
+  function initHeader() {
+    els.modulePath.textContent = data.modulePath || '.';
+    els.modulePath.title = data.modulePath || '.';
+    updateHeadline();
+  }
+  function updateHeadline() {
+    const s = allRunsActive()
+      ? { covered: data.coveredStmts, total: data.totalStmts, percent: data.overallPct }
+      : overallStats();
+    els.overallPct.textContent = Math.round(s.percent) + '%';
+    els.overallMeta.textContent = `${s.covered} / ${s.total} statements`;
+    setGauge(s.percent);
+  }
+
+  /* ---------- view selector (segmented) ---------- */
+  function moveIndicator() {
+    const active = els.viewSelector.querySelector('.seg.active');
+    if (!active) return;
+    els.segIndicator.style.width = active.offsetWidth + 'px';
+    els.segIndicator.style.transform = `translateX(${active.offsetLeft - 4}px)`;
+  }
+  function switchView(view) {
+    currentView = view;
+    saveState({ view });
+    els.viewSelector.querySelectorAll('.seg').forEach(b => {
+      const on = b.dataset.view === view;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    Object.entries(els.views).forEach(([k, v]) => v.classList.toggle('active', k === view));
+    moveIndicator();
+    if (view === 'treemap') renderTreemap();
+    else { renderTree(); renderFileDetail(); }
+  }
+  function initViewSelector() {
+    els.viewSelector.querySelectorAll('.seg').forEach(btn => {
+      btn.addEventListener('click', () => switchView(btn.dataset.view));
+    });
+    moveIndicator();
+    window.addEventListener('resize', moveIndicator);
+  }
+
+  /* ---------- theme ---------- */
+  function applyTheme(theme) {
+    const light = theme === 'light';
+    document.body.classList.toggle('theme-light', light);
+    document.body.classList.toggle('theme-dark', !light);
+  }
+  function initTheme() {
+    if (savedState.theme === 'light' || savedState.theme === 'dark') {
+      applyTheme(savedState.theme);
+    }
+    els.themeToggle.addEventListener('click', () => {
+      const light = document.body.classList.toggle('theme-light');
+      document.body.classList.toggle('theme-dark', !light);
+      saveState({ theme: light ? 'light' : 'dark' });
+      if (currentView === 'treemap') renderTreemap();
+    });
+  }
+
+  /* ---------- run filter dropdown ---------- */
+  function runLabel() {
+    if (allRunsActive()) return 'All runs';
+    if (activeRuns.size === 0) return 'All runs';
+    if (activeRuns.size === 1) {
+      const r = data.runs.find(r => activeRuns.has(r.id));
+      return r ? r.label : '1 run';
+    }
+    return `${activeRuns.size} runs`;
+  }
+  function refreshAll() {
+    updateHeadline();
+    if (currentView === 'treemap') renderTreemap();
+    else { renderTree(); renderFileDetail(); }
+  }
+  function initRunFilter() {
+    if (data.runs.length <= 1) { els.runFilter.style.display = 'none'; }
+    data.runs.forEach(r => {
+      const opt = document.createElement('label');
+      opt.className = 'run-option';
+      const checked = activeRuns.has(r.id) ? ' checked' : '';
+      opt.innerHTML = `<input type="checkbox"${checked} value="${r.id}"><span class="ro-label">${esc(r.label)}</span>`;
+      opt.querySelector('input').addEventListener('change', e => {
+        if (e.target.checked) activeRuns.add(r.id); else activeRuns.delete(r.id);
+        if (activeRuns.size === 0) {
+          data.runs.forEach(x => activeRuns.add(x.id));
+          els.runMenu.querySelectorAll('input').forEach(i => { i.checked = true; });
+        }
+        saveState({ runs: [...activeRuns] });
+        els.runTriggerLabel.textContent = runLabel();
+        refreshAll();
+      });
+      els.runMenu.appendChild(opt);
+    });
+    els.runTriggerLabel.textContent = runLabel();
+    els.runTrigger.addEventListener('click', e => {
+      e.stopPropagation();
+      const open = els.runFilter.classList.toggle('open');
+      els.runTrigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    document.addEventListener('click', e => {
+      if (!els.runFilter.contains(e.target)) {
+        els.runFilter.classList.remove('open');
+        els.runTrigger.setAttribute('aria-expanded', 'false');
+      }
+    });
+  }
+
+  /* ---------- fuzzy matching (drives the live tree filter) ---------- */
+  function fuzzyScore(query, target) {
+    // subsequence match; returns {score, positions} or null
+    const q = query.toLowerCase(), t = target.toLowerCase();
+    let qi = 0, ti = 0, score = 0, streak = 0;
+    const positions = [];
+    while (qi < q.length && ti < t.length) {
+      if (q[qi] === t[ti]) {
+        positions.push(ti);
+        streak++;
+        score += 10 + streak * 4;
+        if (ti === 0 || /[\/_.\-]/.test(t[ti - 1])) score += 15; // boundary bonus
+        qi++;
+      } else { streak = 0; }
+      ti++;
+    }
+    if (qi < q.length) return null;
+    score -= ti * 0.5; // prefer shorter / earlier matches
+    return { score, positions };
+  }
+
+  function highlight(text, positions, offset) {
+    let out = '', last = 0;
+    const set = new Set(positions.map(p => p - offset));
+    for (let i = 0; i < text.length; i++) {
+      if (set.has(i)) {
+        if (last < i) out += esc(text.slice(last, i));
+        out += '<mark>' + esc(text[i]) + '</mark>';
+        last = i + 1;
+      }
+    }
+    out += esc(text.slice(last));
+    return out;
+  }
+
+  // Returns the fuzzy match result for a file node against the active query,
+  // or null when it doesn't match. Empty query matches everything.
+  function fileMatch(node) {
+    if (!treeQuery) return { positions: [] };
+    const rel = (data.files[node.path] && data.files[node.path].relPath) || node.path;
+    return fuzzyScore(treeQuery, rel);
+  }
+
+  function moveSelection(delta) {
+    if (!visibleFileRows.length) return;
+    let idx = visibleFileRows.findIndex(r => r.path === selectedFile);
+    idx = idx < 0 ? (delta > 0 ? 0 : visibleFileRows.length - 1) : idx + delta;
+    idx = Math.max(0, Math.min(visibleFileRows.length - 1, idx));
+    selectedFile = visibleFileRows[idx].path;
+    renderFileDetail();
+    markActiveRow();
+    const row = visibleFileRows[idx].row;
+    if (row && row.scrollIntoView) row.scrollIntoView({ block: 'nearest' });
+  }
+
+  function initSearch() {
+    const apply = () => {
+      treeQuery = els.searchInput.value.trim();
+      els.searchClear.hidden = !treeQuery;
+      saveState({ query: treeQuery });
+      if (currentView === 'treemap') renderTreemap();
+      else renderTree();
+    };
+    // Restore a previously typed filter so the same files stay narrowed down.
+    if (treeQuery) {
+      els.searchInput.value = treeQuery;
+      els.searchClear.hidden = false;
+    }
+    els.searchInput.addEventListener('input', apply);
+    els.searchInput.addEventListener('keydown', e => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); moveSelection(1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); moveSelection(-1); }
+      else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (!visibleFileRows.some(r => r.path === selectedFile)) moveSelection(1);
+        els.searchInput.blur();
+      } else if (e.key === 'Escape') {
+        els.searchInput.value = ''; apply(); els.searchInput.blur();
+      }
+    });
+    els.searchClear.addEventListener('click', () => {
+      els.searchInput.value = ''; treeQuery = ''; els.searchClear.hidden = true;
+      saveState({ query: '' });
+      if (currentView === 'treemap') renderTreemap(); else renderTree();
+      els.searchInput.focus();
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === '/' && document.activeElement !== els.searchInput) {
+        e.preventDefault(); els.searchInput.focus(); els.searchInput.select();
+      }
+    });
+  }
+
+  /* ---------- breadcrumb ---------- */
+  function buildBreadcrumb(onClick) {
+    const bc = document.createElement('div');
+    bc.className = 'breadcrumb';
+    treemapStack.forEach((n, i) => {
+      if (i > 0) { const s = document.createElement('span'); s.className = 'sep'; s.textContent = '/'; bc.appendChild(s); }
+      if (i === treemapStack.length - 1) {
+        const cur = document.createElement('span');
+        cur.className = 'crumb-current';
+        cur.textContent = n.name || 'root';
+        bc.appendChild(cur);
+      } else {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = n.name || 'root';
+        btn.addEventListener('click', () => onClick(i));
+        bc.appendChild(btn);
+      }
+    });
+    return bc;
+  }
+
+  /* ---------- treemap ---------- */
+  // Packages are drawn as nested frames that physically surround their
+  // sub-packages and files. Nesting depth is NOT fixed: a package keeps
+  // unfolding its children inline for as long as there is enough room on
+  // screen to show them. When a package gets too small to unfold it falls
+  // back to a single colored cell with a "click to open" affordance.
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  let tmClipSeq = 0;            // unique clip-path ids, reset on each full render
+  const TM_MAX_DEPTH = 16;      // safety cap; the real limit is available pixels
+  const TM_GAP = 8;             // gap between sibling cells
+  const TM_MIN_NEST_W = 120;    // min size before a package stops unfolding inline
+  const TM_MIN_NEST_H = 96;
+  const TM_LABEL_W = 52;        // min cell size to show a text label
+  const TM_LABEL_H = 24;
+  const TM_GLYPH_MIN = 15;      // min cell size to show a "click to open" glyph
+
+  // ---- Squarified weighting (log-scaled) ----
+  // Codebases have extreme size variance (a core package may have tens of
+  // thousands of statements while a sibling has ten), so sizing tiles by raw
+  // counts makes the small ones vanish into slivers. Instead each tile's
+  // *visual weight* is log-scaled and blends coverable statements (S) with the
+  // file count (N):
+  //     W = α·log10(S + 1) + β·log10(N + 1)
+  // The `+ 1` avoids log10(0). Tiles are then sized in proportion to their
+  // share of the total weight, and the long tail past TM_MAX_ITEMS is folded
+  // into one synthetic "Others" tile so a level never dissolves into clutter.
+  const TM_W_ALPHA = 0.8;       // weight given to statement count (size)
+  const TM_W_BETA = 0.2;        // weight given to file count
+  const TM_MAX_ITEMS = 20;      // max tiles per level before aggregating "Others"
+
+  // Files are drawn as small rectangles sized to just fit their (truncated)
+  // file name plus a file icon — not by statement count. Packages keep their
+  // area encoding; files are uniform little chips so they read as "leaves".
+  const FILE_CHIP_H = 23;       // fixed chip height
+  const FILE_CHIP_GAP = 6;      // gap between chips
+  const FILE_CHIP_MINW = 30;    // smallest chip (icon only)
+  const FILE_CHIP_MAXW = 172;   // widest chip before the name gets truncated
+  const CHIP_PADX = 7;          // horizontal padding inside a chip
+  const CHIP_ICON = 13;         // icon box size inside a chip
+  const CHIP_CHARW = 6.7;       // approx label width per character
+  const MAX_FILE_STRIP_ROWS = 4; // file-strip rows when a package also has sub-packages
+
+  // 24x24 stroke icons (same paths as the tree view) so files and packages are
+  // visually distinguished inside the treemap: a document for files, a folder
+  // for packages.
+  const ICON_PATHS = {
+    file: ['M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z', 'M14 2v6h6'],
+    folder: ['M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'],
+  };
+  function tmIcon(kind, x, y, size) {
+    const g = document.createElementNS(SVGNS, 'g');
+    g.setAttribute('transform', `translate(${x},${y}) scale(${size / 24})`);
+    g.setAttribute('class', 'treemap-icon');
+    ICON_PATHS[kind].forEach(d => {
+      const p = document.createElementNS(SVGNS, 'path');
+      p.setAttribute('d', d);
+      g.appendChild(p);
+    });
+    return g;
+  }
+
+  // Width a file chip needs to show its whole name (capped at FILE_CHIP_MAXW,
+  // beyond which the name is truncated with an ellipsis).
+  function tmChipWidth(name) {
+    // +6 slack so a name that fits never gets truncated by a rounding/floor edge.
+    const inner = CHIP_ICON + 4 + name.length * CHIP_CHARW + 6;
+    return Math.round(Math.min(FILE_CHIP_MAXW, Math.max(FILE_CHIP_MINW, CHIP_PADX * 2 + inner)));
+  }
+
+  // Pack file chips into rows that fit within `w` (a simple wrap/flow layout).
+  // Returns [{ items: [{file, w}], w }] in draw order.
+  function packChips(files, w) {
+    const rows = [];
+    let cur = [], curW = 0;
+    files.forEach(f => {
+      const cw = tmChipWidth(f.name);
+      if (cur.length && curW + FILE_CHIP_GAP + cw > w) { rows.push({ items: cur, w: curW }); cur = []; curW = 0; }
+      curW += (cur.length ? FILE_CHIP_GAP : 0) + cw;
+      cur.push({ file: f, w: cw });
+    });
+    if (cur.length) rows.push({ items: cur, w: curW });
+    return rows;
+  }
+
+  // Surrounding frame thickness, generous near the top so a parent package
+  // visibly wraps its children, tighter as we go deeper to conserve space.
+  // (Mirrors go-cover-treemap's larger root `padding` vs. inner `padding-box`.)
+  function tmPad(depth) {
+    if (depth <= 0) return 24;
+    if (depth === 1) return 18;
+    if (depth === 2) return 13;
+    return 10;
+  }
+
+  // Collapse single-child directory chains into one box, like go-cover-treemap's
+  // `collapse-root`: a package that only contains another package is shown as
+  // `parent/child` so we don't waste a whole nesting level (and padding) on it.
+  function tmCollapse(node) {
+    let cur = node;
+    let name = node.name;
+    while (cur.isDir) {
+      const kids = (cur.children || []).filter(c => c.total > 0);
+      if (kids.length === 1 && kids[0].isDir) {
+        cur = kids[0];
+        name = name + '/' + cur.name;
+      } else break;
+    }
+    return cur === node ? node : { ...cur, name, orig: cur.orig };
+  }
+
+  function tmHeaderH(w, h) {
+    if (w < 90 || h < 70) return 18;
+    return 24;
+  }
+
+  function tmTrunc(s, w, perChar) {
+    const max = Math.floor(w / perChar);
+    if (max < 2) return '';
+    return s.length > max ? s.slice(0, Math.max(1, max - 1)) + '…' : s;
+  }
+
+  function tmCountLeaves(n) {
+    if (!n.isDir) return 1;
+    return (n.children || []).reduce((s, c) => s + (c.total > 0 ? tmCountLeaves(c) : 0), 0);
+  }
+
+  function layoutTreemap(items, x, y, w, h, horizontal) {
+    if (!items.length) return [];
+    if (items.length === 1) return [{ ...items[0], x, y, w, h }];
+    const total = items.reduce((s, i) => s + i.value, 0);
+    let acc = 0, split = 0;
+    for (let i = 0; i < items.length; i++) { acc += items[i].value; if (acc >= total / 2) { split = i + 1; break; } }
+    if (split === 0) split = 1;
+    const left = items.slice(0, split), right = items.slice(split);
+    const ratio = left.reduce((s, i) => s + i.value, 0) / total;
+    const rects = [];
+    if (horizontal) {
+      const lw = w * ratio;
+      rects.push(...layoutTreemap(left, x, y, lw, h, !horizontal));
+      rects.push(...layoutTreemap(right, x + lw, y, w - lw, h, !horizontal));
+    } else {
+      const lh = h * ratio;
+      rects.push(...layoutTreemap(left, x, y, w, lh, !horizontal));
+      rects.push(...layoutTreemap(right, x, y + lh, w, h - lh, !horizontal));
+    }
+    return rects;
+  }
+
+  function drillInto(origNode) {
+    treemapStack.push(origNode);
+    renderTreemap();
+  }
+  function openFile(node) {
+    selectedFile = node.path;
+    switchView('files');
+  }
+
+  function tmRect(x, y, w, h, cls) {
+    const r = document.createElementNS(SVGNS, 'rect');
+    r.setAttribute('x', x); r.setAttribute('y', y);
+    r.setAttribute('width', Math.max(0, w)); r.setAttribute('height', Math.max(0, h));
+    r.setAttribute('rx', 4);
+    if (cls) r.setAttribute('class', cls);
+    return r;
+  }
+  function tmTitle(el, n) {
+    const t = document.createElementNS(SVGNS, 'title');
+    const lead = n.others ? `Others — ${n._count} smaller items folded together` : n.name;
+    t.textContent = `${lead} — ${formatPct(n.percent)} (${n.covered}/${n.total})`;
+    el.appendChild(t);
+  }
+  // Return a <g> clipped to the given rect, appended to `parent`. Anything drawn
+  // into it is cropped to the rect instead of bleeding over a neighbour — the
+  // safety net behind "hide it rather than show it weirdly".
+  function tmClip(parent, x, y, w, h) {
+    const id = 'tmclip-' + (tmClipSeq++);
+    const cp = document.createElementNS(SVGNS, 'clipPath');
+    cp.setAttribute('id', id);
+    const r = document.createElementNS(SVGNS, 'rect');
+    r.setAttribute('x', x); r.setAttribute('y', y);
+    r.setAttribute('width', Math.max(0, w)); r.setAttribute('height', Math.max(0, h));
+    cp.appendChild(r);
+    parent.appendChild(cp);
+    const g = document.createElementNS(SVGNS, 'g');
+    g.setAttribute('clip-path', `url(#${id})`);
+    parent.appendChild(g);
+    return g;
+  }
+  // A "+" mark telling the user there is content to open inside a small cell.
+  function tmPlus(cx, cy, r) {
+    const p = document.createElementNS(SVGNS, 'path');
+    p.setAttribute('d', `M${cx - r} ${cy} H${cx + r} M${cx} ${cy - r} V${cy + r}`);
+    p.setAttribute('class', 'treemap-glyph');
+    return p;
+  }
+  // A small ">" chevron hinting "click to drill into this package".
+  function tmChevron(x, y, s) {
+    const p = document.createElementNS(SVGNS, 'path');
+    p.setAttribute('d', `M${x} ${y} l${s} ${s} l${-s} ${s}`);
+    p.setAttribute('class', 'treemap-glyph');
+    return p;
+  }
+
+  // Draw a single package cell that is too small to unfold (collapsed package).
+  function tmDrawLeaf(svg, n, x, y, w, h) {
+    const cw = Math.max(0, w - TM_GAP), ch = Math.max(0, h - TM_GAP);
+    const isPkg = n.isDir && (n.children || []).some(c => c.total > 0);
+    const g = document.createElementNS(SVGNS, 'g');
+    const rect = tmRect(x, y, cw, ch, 'treemap-cell' + (n.isDir ? ' is-dir' : '') + (n.others ? ' treemap-others' : ''));
+    rect.setAttribute('fill', tmColor(n.percent));
+    rect.setAttribute('stroke', tmStrong(n.percent));
+    tmTitle(rect, n);
+    rect.addEventListener('click', () => { if (n.isDir) drillInto(n.orig); else openFile(n); });
+    g.appendChild(rect);
+
+    if (cw > TM_LABEL_W && ch > TM_LABEL_H) {
+      let lx = x + 7;
+      if (isPkg && cw > 70) {
+        const ic = Math.min(14, ch - 6);
+        g.appendChild(tmIcon('folder', x + 7, y + 6, ic));
+        lx += ic + 5;
+      }
+      const t1 = document.createElementNS(SVGNS, 'text');
+      t1.setAttribute('x', lx); t1.setAttribute('y', y + 18);
+      t1.setAttribute('class', 'treemap-label');
+      t1.textContent = tmTrunc(n.name, x + cw - 7 - lx, 7.6);
+      g.appendChild(t1);
+      if (ch > 46) {
+        const subText = isPkg ? `${formatPct(n.percent)} · ${tmCountLeaves(n)} files` : formatPct(n.percent);
+        const sub = tmTrunc(subText, cw - 14, 6.2);
+        if (sub) {
+          const t2 = document.createElementNS(SVGNS, 'text');
+          t2.setAttribute('x', x + 7); t2.setAttribute('y', y + 35);
+          t2.setAttribute('class', 'treemap-label sub');
+          t2.textContent = sub;
+          g.appendChild(t2);
+        }
+      }
+
+      // Packages always advertise that there's more to open inside.
+      if (isPkg && cw > 34) g.appendChild(tmChevron(x + cw - 13, y + 8, 4));
+    } else if (isPkg && cw > TM_GLYPH_MIN && ch > TM_GLYPH_MIN) {
+      // Too small for a label: still show that there's something to open.
+      const r = Math.min(6, cw / 3.5, ch / 3.5);
+      g.appendChild(tmPlus(x + cw / 2, y + ch / 2, r));
+    }
+    svg.appendChild(g);
+  }
+
+  // Draw a single file as a small rectangle just wide enough for its name,
+  // prefixed with a file icon. The name is truncated with an ellipsis when the
+  // chip is at its maximum width.
+  function tmDrawFileChip(svg, n, x, y, w, h) {
+    const g = document.createElementNS(SVGNS, 'g');
+    const rect = tmRect(x, y, w, h, 'treemap-file');
+    rect.setAttribute('rx', 4);
+    rect.setAttribute('fill', tmColor(n.percent));
+    rect.setAttribute('stroke', tmStrong(n.percent));
+    tmTitle(rect, n);
+    rect.addEventListener('click', () => openFile(n));
+    g.appendChild(rect);
+
+    let textX = x + CHIP_PADX;
+    const iconSize = Math.min(CHIP_ICON, h - 8);
+    if (w >= FILE_CHIP_MINW && iconSize >= 9) {
+      g.appendChild(tmIcon('file', x + CHIP_PADX, y + (h - iconSize) / 2, iconSize));
+      textX += iconSize + 4;
+    }
+    const avail = x + w - CHIP_PADX - textX;
+    if (avail > 8) {
+      const label = tmTrunc(n.name, avail, CHIP_CHARW);
+      if (label) {
+        const t = document.createElementNS(SVGNS, 'text');
+        t.setAttribute('x', textX); t.setAttribute('y', y + h / 2);
+        t.setAttribute('class', 'treemap-file-label');
+        t.textContent = label;
+        g.appendChild(t);
+      }
+    }
+    svg.appendChild(g);
+  }
+
+  // A "+N" chip standing in for files that didn't fit, so a package with many
+  // files visibly signals there is more than what is shown.
+  function tmDrawMoreChip(svg, count, x, y, w, h, onClick) {
+    const g = document.createElementNS(SVGNS, 'g');
+    const rect = tmRect(x, y, w, h, 'treemap-more');
+    rect.setAttribute('rx', 4);
+    const title = document.createElementNS(SVGNS, 'title');
+    title.textContent = `${count} more file${count === 1 ? '' : 's'} — click to open this package`;
+    rect.appendChild(title);
+    if (onClick) { rect.addEventListener('click', onClick); rect.style.cursor = 'pointer'; }
+    g.appendChild(rect);
+    const t = document.createElementNS(SVGNS, 'text');
+    t.setAttribute('x', x + w / 2); t.setAttribute('y', y + h / 2);
+    t.setAttribute('class', 'treemap-more-label');
+    t.textContent = '+' + count;
+    g.appendChild(t);
+    svg.appendChild(g);
+  }
+
+  // Lay files out as small name-sized chips that wrap across rows within the
+  // available area. When there are more files than fit, the last visible slot
+  // becomes a "+N" overflow chip.
+  function tmDrawFileFlow(svg, files, x, y, w, h, onMore) {
+    if (w < FILE_CHIP_MINW || h < FILE_CHIP_H || !files.length) return;
+    files = files.slice().sort((a, b) => a.name.localeCompare(b.name));
+    const rowPitch = FILE_CHIP_H + FILE_CHIP_GAP;
+    const maxRows = Math.max(1, Math.floor((h + FILE_CHIP_GAP) / rowPitch));
+
+    let rows = packChips(files, w);
+    let shown = rows.slice(0, maxRows);
+    const shownCount = shown.reduce((s, r) => s + r.items.length, 0);
+    let overflow = files.length - shownCount;
+    if (overflow > 0) {
+      // Carve room for a "+N" chip in the last visible row. Size it for the
+      // worst-case digit count up front so it never grows (and spills) later,
+      // and never let it be wider than the row itself.
+      const digits = ('' + files.length).length;
+      const moreW = Math.min(w, Math.max(FILE_CHIP_MINW, 16 + digits * CHIP_CHARW + CHIP_PADX * 2));
+      const last = shown[shown.length - 1];
+      const rowW = items => items.reduce((s, it, i) => s + (i ? FILE_CHIP_GAP : 0) + it.w, 0);
+      // Drop trailing chips — down to an empty row if needed — until the "+N"
+      // marker fits. This guarantees the row never extends past `w`.
+      while (last.items.length && rowW(last.items) + FILE_CHIP_GAP + moreW > w) {
+        last.items.pop();
+        overflow++;
+      }
+      last.items.push({ more: overflow, w: moreW });
+      last.w = rowW(last.items);
+    }
+
+    const usedH = shown.length * rowPitch - FILE_CHIP_GAP;
+    let cy = y + Math.max(0, (h - usedH) / 2);
+    shown.forEach(row => {
+      let cx = x; // left aligned
+      row.items.forEach(it => {
+        if (it.more) tmDrawMoreChip(svg, it.more, cx, cy, it.w, FILE_CHIP_H, onMore);
+        else tmDrawFileChip(svg, it.file, cx, cy, it.w, FILE_CHIP_H);
+        cx += it.w + FILE_CHIP_GAP;
+      });
+      cy += rowPitch;
+    });
+  }
+
+  // Draw a package as a frame that surrounds its children. The WHOLE rectangle
+  // is filled with the package's coverage color; a label sits in the top band
+  // and the children are laid out (and recursively unfolded) on top, each with
+  // its own border so the separation between items stays visible.
+  function tmDrawContainer(svg, n, x, y, w, h, depth) {
+    const cw = Math.max(0, w - TM_GAP), ch = Math.max(0, h - TM_GAP);
+    const headerH = tmHeaderH(cw, ch);
+    const clickable = depth > 0;
+    const g = document.createElementNS(SVGNS, 'g');
+
+    const bg = tmRect(x, y, cw, ch, 'treemap-container' + (clickable ? ' tm-clickable' : '') + (n.others ? ' treemap-others' : ''));
+    bg.setAttribute('fill', tmColor(n.percent));
+    bg.setAttribute('stroke', tmStrong(n.percent));
+    tmTitle(bg, n);
+    g.appendChild(bg);
+
+    const kids = (n.children || []).filter(c => c.total > 0);
+    const dirs = kids.filter(c => c.isDir);
+    const files = kids.filter(c => !c.isDir);
+
+    // Folder icon marking this box as a package.
+    let labelX = x + 8;
+    const hIcon = Math.min(15, headerH - 5);
+    if (cw > 64 && hIcon >= 10) {
+      g.appendChild(tmIcon('folder', x + 8, y + (headerH - hIcon) / 2 - 1, hIcon));
+      labelX += hIcon + 5;
+    }
+
+    const label = document.createElementNS(SVGNS, 'text');
+    label.setAttribute('x', labelX); label.setAttribute('y', y + headerH - 7);
+    label.setAttribute('class', 'treemap-header-label');
+    const meta = files.length > 0 ? `  ${formatPct(n.percent)} · ${files.length}f` : `  ${formatPct(n.percent)}`;
+    label.textContent = tmTrunc(`${n.name}${meta}`, x + cw - 14 - labelX, 7);
+    g.appendChild(label);
+
+    if (clickable) {
+      const drill = () => drillInto(n.orig);
+      bg.addEventListener('click', drill);
+      label.addEventListener('click', drill);
+      label.style.cursor = 'pointer';
+      if (cw > 40) g.appendChild(tmChevron(x + cw - 14, y + headerH / 2 - 4, 4));
+    }
+
+    svg.appendChild(g);
+
+    const pad = tmPad(depth);
+    const bx = x + pad, by = y + headerH, bw = cw - pad * 2, bh = ch - headerH - pad;
+    if (bw <= 2 || bh <= 2) return;
+    const onMore = clickable ? () => drillInto(n.orig) : null;
+
+    // Everything inside the package is drawn into a group clipped to the body,
+    // so a child that ends up a hair too large is cropped rather than painting
+    // over a sibling package.
+    const body = tmClip(svg, bx, by, bw, bh);
+
+    if (!dirs.length) {
+      // Leaf package: just files, flowed as name-sized chips.
+      tmDrawFileFlow(body, files, bx, by, bw, bh, onMore);
+    } else if (!files.length) {
+      // Only sub-packages: squarify them across the whole body.
+      tmLayoutNodes(body, dirs, bx, by, bw, bh, depth + 1, n.path);
+    } else {
+      // Both: sub-packages fill the body, files sit in a strip at the bottom.
+      const rows = packChips(files, bw);
+      const wantRows = Math.min(rows.length, MAX_FILE_STRIP_ROWS);
+      let stripH = wantRows * (FILE_CHIP_H + FILE_CHIP_GAP) - FILE_CHIP_GAP;
+      stripH = Math.min(stripH, Math.max(0, bh * 0.5));
+      const dirH = bh - stripH - FILE_CHIP_GAP;
+      if (dirH >= TM_MIN_NEST_H * 0.5 && stripH >= FILE_CHIP_H) {
+        tmLayoutNodes(body, dirs, bx, by, bw, dirH, depth + 1, n.path);
+        tmDrawFileFlow(body, files, bx, by + dirH + FILE_CHIP_GAP, bw, stripH, onMore);
+      } else {
+        // Too cramped to split: give the whole body to the sub-packages.
+        tmLayoutNodes(body, dirs, bx, by, bw, bh, depth + 1, n.path);
+      }
+    }
+  }
+
+  // Number of files a node represents: a leaf is one file, a package is its
+  // count of coverable leaves (or an explicit override for synthetic nodes).
+  function tmFileCount(n) {
+    if (typeof n._files === 'number') return n._files;
+    return n.isDir ? tmCountLeaves(n) : 1;
+  }
+
+  // Log-scaled visual weight  W = α·log10(S + 1) + β·log10(N + 1)  where S is
+  // coverable statements and N is the file count. This compresses the codebase's
+  // huge size variance so small packages stay legible next to large ones.
+  function tmWeight(n) {
+    const s = Math.max(0, n.total || 0);
+    const nf = Math.max(0, tmFileCount(n));
+    return TM_W_ALPHA * Math.log10(s + 1) + TM_W_BETA * Math.log10(nf + 1);
+  }
+
+  // Fold a list of small items into one synthetic "Others" package. Its raw
+  // statements/files are the combined sums of its members, so its own weight is
+  // computed exactly like a normal folder. It keeps the real members as children
+  // so clicking it drills in to reveal them.
+  function tmMakeOthers(rest, parentPath) {
+    let total = 0, covered = 0, files = 0;
+    rest.forEach(c => { total += c.total || 0; covered += c.covered || 0; files += tmFileCount(c); });
+    const node = {
+      isDir: true,
+      others: true,
+      name: 'Others',
+      path: (parentPath || '') + '/\u2039others\u203a',
+      children: rest,
+      total, covered,
+      percent: total > 0 ? (covered / total) * 100 : 0,
+      _files: files,
+      _count: rest.length,
+    };
+    node.orig = node;
+    return node;
+  }
+
+  // Squarify a list of (coverable) nodes inside the given rect and draw each.
+  // Tiles are ranked by log-scaled weight; everything past TM_MAX_ITEMS is
+  // aggregated into a single "Others" tile, and each tile's area is made
+  // proportional to its share of the total weight (A_i = A_total · W_i / ΣW_j).
+  function tmLayoutNodes(svg, nodes, x, y, w, h, depth, parentPath) {
+    if (w <= 2 || h <= 2) return;
+    let coverable = nodes.filter(c => c.total > 0);
+    if (!coverable.length) return;
+
+    coverable = coverable.slice().sort((a, b) => tmWeight(b) - tmWeight(a));
+    let display = coverable;
+    if (coverable.length > TM_MAX_ITEMS) {
+      // Keep the top (K-1) heaviest items and reserve the last slot for "Others".
+      const top = coverable.slice(0, TM_MAX_ITEMS - 1);
+      const others = tmMakeOthers(coverable.slice(TM_MAX_ITEMS - 1), parentPath);
+      display = top.concat(others);
+    }
+
+    const items = display
+      .map(c => ({ node: c.others ? c : tmCollapse(c), value: tmWeight(c) }))
+      .sort((a, b) => b.value - a.value);
+    const rects = layoutTreemap(items, x, y, w, h, w >= h);
+    rects.forEach(r => tmDrawNode(svg, r.node, r.x, r.y, r.w, r.h, depth));
+  }
+
+  // Decide whether a package has room to keep unfolding inline, or should
+  // collapse into a single clickable cell.
+  function tmCanNest(n, w, h, depth) {
+    if (depth >= TM_MAX_DEPTH || !n.isDir) return false;
+    if (!(n.children || []).some(c => c.total > 0)) return false;
+    return w >= TM_MIN_NEST_W && h >= TM_MIN_NEST_H;
+  }
+
+  function tmDrawNode(svg, n, x, y, w, h, depth) {
+    if (tmCanNest(n, w, h, depth)) tmDrawContainer(svg, n, x, y, w, h, depth);
+    else tmDrawLeaf(svg, n, x, y, w, h);
+  }
+
+  function renderTreemap() {
+    const container = els.views.treemap;
+    container.innerHTML = '';
+    const node = treemapStack[treemapStack.length - 1];
+    const filtered = pruneTreeByQuery(filterTree(node) || node);
+
+    container.appendChild(buildBreadcrumb(i => { treemapStack = treemapStack.slice(0, i + 1); renderTreemap(); }));
+
+    const hasItems = filtered && (filtered.children || []).some(c => c.total > 0);
+    if (!hasItems) {
+      const d = document.createElement('div');
+      d.className = 'treemap-empty';
+      d.textContent = treeQuery
+        ? 'No files match “' + treeQuery + '”'
+        : 'No coverable statements in this view.';
+      container.appendChild(d);
+      return;
+    }
+
+    const svg = document.createElementNS(SVGNS, 'svg');
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    container.appendChild(svg);
+
+    // Size the coordinate system to the SVG's *actual* pixel box so one user
+    // unit equals one screen pixel. Previously the viewBox height was guessed
+    // from window.innerHeight while CSS sized the element via a clamp(), and
+    // preserveAspectRatio:none stretched every cell (and its text) to bridge
+    // the gap — which is what pushed labels out of their rectangles. Matching
+    // the viewBox to the rendered size keeps geometry and truncation honest.
+    const box = svg.getBoundingClientRect();
+    const width = Math.max(320, Math.round(box.width || container.clientWidth || 960));
+    const height = Math.max(320, Math.round(box.height || 560));
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+    // The current root is the big enclosing frame; its sub-packages unfold
+    // inside it, each holding their own sub-packages / file cells, as deep
+    // as the available space allows.
+    tmClipSeq = 0;
+    tmDrawContainer(svg, tmCollapse(filtered), 0, 0, width, height, 0);
+  }
+
+  /* ---------- tree ---------- */
+  const FOLDER_SVG = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>';
+  const FILE_SVG = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>';
+  const CHEV_SVG = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"></path></svg>';
+
+  // Recursively render a node. Returns true when the node (or a descendant)
+  // is part of the current filter, false when it should be pruned.
+  function renderTreeNode(node, parentUl, depth) {
+    if (node.isDir) {
+      const childUl = document.createElement('ul');
+      childUl.className = 'tree-list';
+      let matched = false;
+      (node.children || []).forEach(c => { if (renderTreeNode(c, childUl, depth + 1)) matched = true; });
+      if (treeQuery && !matched) return false;
+
+      const li = document.createElement('li');
+      li.className = 'tree-item';
+      const row = buildTreeRow(node, depth, false);
+      const toggle = row.querySelector('.tree-toggle');
+      const open = treeQuery ? true : depth < 1;
+      childUl.style.display = open ? 'block' : 'none';
+      toggle.classList.toggle('open', open);
+      li.append(row, childUl);
+      row.addEventListener('click', () => {
+        const isOpen = childUl.style.display !== 'none';
+        childUl.style.display = isOpen ? 'none' : 'block';
+        toggle.classList.toggle('open', !isOpen);
+      });
+      parentUl.appendChild(li);
+      return true;
+    }
+
+    const m = fileMatch(node);
+    if (!m) return false;
+    const li = document.createElement('li');
+    li.className = 'tree-item';
+    const row = buildTreeRow(node, depth, true, m.positions);
+    if (node.path === selectedFile) row.classList.add('active');
+    li.appendChild(row);
+    row.addEventListener('click', () => {
+      selectedFile = node.path;
+      renderFileDetail();
+      markActiveRow();
+    });
+    parentUl.appendChild(li);
+    visibleFileRows.push({ path: node.path, row });
+    return true;
+  }
+
+  function buildTreeRow(node, depth, isFile, positions) {
+    const row = document.createElement('div');
+    row.className = 'tree-row ' + (isFile ? 'is-file' : 'is-dir');
+    row.style.paddingLeft = (0.6 + depth * 1.1) + 'rem';
+
+    const toggle = document.createElement('span');
+    toggle.className = 'tree-toggle' + (isFile ? ' leaf' : '');
+    if (!isFile) toggle.innerHTML = CHEV_SVG;
+
+    const icon = document.createElement('span');
+    icon.className = 'tree-icon';
+    icon.innerHTML = isFile ? FILE_SVG : FOLDER_SVG;
+
+    const name = document.createElement('span');
+    name.className = 'tree-name';
+    if (isFile && treeQuery && positions && positions.length) {
+      const rel = (data.files[node.path] && data.files[node.path].relPath) || node.path;
+      name.innerHTML = highlight(node.name, positions, rel.length - node.name.length);
+    } else {
+      name.textContent = node.name;
+    }
+
+    const spacer = document.createElement('span');
+    spacer.className = 'tree-spacer';
+
+    const count = document.createElement('span');
+    count.className = 'count-label';
+    count.textContent = `${node.covered}/${node.total}`;
+
+    const barWrap = document.createElement('div');
+    barWrap.className = 'bar-wrap';
+    const bar = document.createElement('div');
+    bar.className = 'bar-fill';
+    bar.style.width = Math.max(0, Math.min(100, node.percent)) + '%';
+    bar.style.background = pctColor(node.percent);
+    barWrap.appendChild(bar);
+
+    const pct = document.createElement('span');
+    pct.className = 'pct-label';
+    pct.textContent = formatPct(node.percent);
+    pct.style.color = pctColor(node.percent);
+
+    const meta = document.createElement('div');
+    meta.className = 'tree-meta';
+    meta.append(count, barWrap, pct);
+
+    row.append(toggle, icon, name, spacer, meta);
+    return row;
+  }
+
+  function markActiveRow() {
+    visibleFileRows.forEach(r => r.row.classList.toggle('active', r.path === selectedFile));
+  }
+
+  // Offset the tree sidebar so its top lines up with the code block (the source
+  // view) rather than the file header above it. Disabled on the stacked mobile
+  // layout where the sidebar sits above the detail.
+  function alignSidebar() {
+    if (!els.fileHead || !els.explorerSidebar) return;
+    if (window.innerWidth <= 860) { els.explorerSidebar.style.marginTop = ''; return; }
+    const mb = parseFloat(getComputedStyle(els.fileHead).marginBottom) || 0;
+    els.explorerSidebar.style.marginTop = (els.fileHead.offsetHeight + mb) + 'px';
+  }
+
+  function renderTree() {
+    const container = els.treeScroll;
+    container.innerHTML = '';
+    visibleFileRows = [];
+
+    const filtered = filterTree(data.tree);
+    const ul = document.createElement('ul');
+    ul.className = 'tree-list';
+    if (filtered && filtered.children) filtered.children.forEach(c => renderTreeNode(c, ul, 0));
+
+    if (treeQuery && !visibleFileRows.length) {
+      const empty = document.createElement('div');
+      empty.className = 'tree-empty';
+      empty.textContent = 'No files match “' + treeQuery + '”';
+      container.appendChild(empty);
+      return;
+    }
+    container.appendChild(ul);
+  }
+  function toggleAllTree(open) {
+    els.treeScroll.querySelectorAll('.tree-item > .tree-list').forEach(ul => { ul.style.display = open ? 'block' : 'none'; });
+    els.treeScroll.querySelectorAll('.tree-toggle:not(.leaf)').forEach(t => t.classList.toggle('open', open));
+  }
+  function initExplorer() {
+    els.treeExpand.addEventListener('click', () => toggleAllTree(true));
+    els.treeCollapse.addEventListener('click', () => toggleAllTree(false));
+    els.explorerToggle.addEventListener('click', () => {
+      const collapsed = els.explorer.classList.toggle('sidebar-collapsed');
+      els.explorerToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+    });
+  }
+
+  /* ---------- file detail ---------- */
+  function renderFileDetail() {
+    if (!selectedFile) { selectedFile = Object.keys(data.files).sort()[0] || null; }
+    if (selectedFile) saveState({ selectedFile });
+    const file = selectedFile ? data.files[selectedFile] : null;
+    const detail = selectedFile ? data.fileDetails[selectedFile] : null;
+
+    if (!file) {
+      els.fileName.textContent = 'No files';
+      els.filePath.textContent = '';
+      els.filePct.textContent = '';
+      els.runBadges.innerHTML = '';
+      els.sourceView.innerHTML = '<div class="source-empty">No files available.</div>';
+      alignSidebar();
+      return;
+    }
+
+    const rel = file.relPath || selectedFile;
+    const slash = rel.lastIndexOf('/');
+    els.fileName.textContent = slash >= 0 ? rel.slice(slash + 1) : rel;
+    els.filePath.textContent = rel;
+    const pct = file.totalStmts > 0 ? (fileCoveredStmts(file) / file.totalStmts) * 100 : 0;
+    els.filePct.textContent = formatPct(pct);
+    els.filePct.style.color = pctColor(pct);
+
+    els.runBadges.innerHTML = '';
+    data.runs.forEach(r => {
+      const hit = file.runCoverage[r.id];
+      const b = document.createElement('span');
+      b.className = 'badge' + (hit ? ' hit' : '') + (activeRuns.has(r.id) ? '' : ' dim');
+      b.textContent = (hit ? '✓ ' : '✗ ') + r.label;
+      els.runBadges.appendChild(b);
+    });
+
+    els.sourceView.innerHTML = '';
+    if (!detail || !detail.lines || !detail.lines.length) {
+      els.sourceView.innerHTML = '<div class="source-empty">Source unavailable for this file.</div>';
+      alignSidebar();
+      return;
+    }
+    const frag = document.createDocumentFragment();
+    detail.lines.forEach(line => {
+      const row = document.createElement('div');
+      row.className = 'source-line line-' + line.state;
+      const num = document.createElement('span');
+      num.className = 'line-num';
+      num.textContent = line.num || '';
+      const gutter = document.createElement('span');
+      gutter.className = 'line-gutter';
+      const code = document.createElement('span');
+      code.className = 'line-code';
+      code.innerHTML = line.html || '&nbsp;';
+      row.append(num, gutter, code);
+      frag.appendChild(row);
+    });
+    els.sourceView.appendChild(frag);
+    markActiveRow();
+    alignSidebar();
+  }
+
+  /* ---------- init ---------- */
+  initHeader();
+  initViewSelector();
+  initTheme();
+  initRunFilter();
+  initExplorer();
+  initSearch();
+  syncLayoutVars();
+  switchView(currentView);
+  requestAnimationFrame(() => { moveIndicator(); syncLayoutVars(); });
+
+  // Keep the sticky-stack metrics in sync as the chrome reflows (font scaling,
+  // toolbar wrapping, run-filter visibility, etc.).
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver(syncLayoutVars);
+    [els.header, els.toolbar, els.footer].forEach(el => el && ro.observe(el));
+  }
+
+  // Re-pack the treemap on resize so it always shows as much as fits on screen.
+  let tmResizeRAF = null;
+  window.addEventListener('resize', () => {
+    syncLayoutVars();
+    if (currentView === 'files') { alignSidebar(); return; }
+    if (currentView !== 'treemap') return;
+    if (tmResizeRAF) cancelAnimationFrame(tmResizeRAF);
+    tmResizeRAF = requestAnimationFrame(renderTreemap);
+  });
+})();
+</script>
+</body>
+</html>
