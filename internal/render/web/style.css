@@ -385,6 +385,7 @@ main { padding: 0.85rem var(--pad-x) 1.5rem; flex: 1; }
 .tree-actions button:hover { color: var(--text); border-color: var(--border-strong); }
 .tree-list { list-style: none; margin: 0; padding: 0; }
 .tree-list .tree-list { margin-left: 0; }
+.tree-scroll > .tree-list { width: max-content; min-width: 100%; }
 .tree-row {
   display: flex; align-items: center; gap: 0.55rem;
   padding: 0.32rem 0.6rem;
@@ -406,12 +407,22 @@ main { padding: 0.85rem var(--pad-x) 1.5rem; flex: 1; }
 .tree-toggle.leaf { visibility: hidden; }
 .tree-icon { flex: none; color: var(--faint); display: grid; place-items: center; }
 .tree-row.is-file .tree-icon { color: var(--accent); }
-.tree-name { font-size: 0.84rem; flex: 0 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tree-name { font-size: 0.84rem; flex: none; white-space: nowrap; }
 .tree-row.is-dir .tree-name { font-weight: 600; }
-.tree-spacer { flex: 1; min-width: 0.5rem; }
-.bar-wrap { width: 64px; flex: none; height: 6px; background: var(--border); border-radius: 999px; overflow: hidden; }
+.tree-spacer { flex: 1; min-width: 0.75rem; }
+.tree-meta {
+  position: sticky; right: 0;
+  flex: none;
+  display: flex; align-items: center; gap: 0.4rem;
+  padding-left: 0.5rem;
+  background: var(--surface);
+  box-shadow: -8px 0 8px -8px rgba(0, 0, 0, 0.18);
+}
+.tree-row:hover .tree-meta { background: var(--surface-2); }
+.tree-row.is-file:hover .tree-meta { background: var(--accent-soft); }
+.bar-wrap { width: 40px; flex: none; height: 5px; background: var(--border); border-radius: 999px; overflow: hidden; }
 .bar-fill { height: 100%; border-radius: 999px; transition: width 0.4s; }
-.pct-label { width: 3.2rem; flex: none; text-align: right; font-variant-numeric: tabular-nums; font-size: 0.78rem; font-weight: 600; }
+.pct-label { width: 2.6rem; flex: none; text-align: right; font-variant-numeric: tabular-nums; font-size: 0.72rem; font-weight: 600; }
 .count-label { display: none; }
 
 /* File detail */

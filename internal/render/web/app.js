@@ -425,6 +425,7 @@
   // screen to show them. When a package gets too small to unfold it falls
   // back to a single colored cell with a "click to open" affordance.
   const SVGNS = 'http://www.w3.org/2000/svg';
+  let tmClipSeq = 0;            // unique clip-path ids, reset on each full render
   const TM_MAX_DEPTH = 16;      // safety cap; the real limit is available pixels
   const TM_GAP = 8;             // gap between sibling cells
   const TM_MIN_NEST_W = 120;    // min size before a package stops unfolding inline
@@ -573,6 +574,23 @@
     t.textContent = `${n.name} — ${formatPct(n.percent)} (${n.covered}/${n.total})`;
     el.appendChild(t);
   }
+  // Return a <g> clipped to the given rect, appended to `parent`. Anything drawn
+  // into it is cropped to the rect instead of bleeding over a neighbour — the
+  // safety net behind "hide it rather than show it weirdly".
+  function tmClip(parent, x, y, w, h) {
+    const id = 'tmclip-' + (tmClipSeq++);
+    const cp = document.createElementNS(SVGNS, 'clipPath');
+    cp.setAttribute('id', id);
+    const r = document.createElementNS(SVGNS, 'rect');
+    r.setAttribute('x', x); r.setAttribute('y', y);
+    r.setAttribute('width', Math.max(0, w)); r.setAttribute('height', Math.max(0, h));
+    cp.appendChild(r);
+    parent.appendChild(cp);
+    const g = document.createElementNS(SVGNS, 'g');
+    g.setAttribute('clip-path', `url(#${id})`);
+    parent.appendChild(g);
+    return g;
+  }
   // A "+" mark telling the user there is content to open inside a small cell.
   function tmPlus(cx, cy, r) {
     const p = document.createElementNS(SVGNS, 'path');
@@ -613,12 +631,17 @@
       t1.textContent = tmTrunc(n.name, x + cw - 7 - lx, 7.6);
       g.appendChild(t1);
       if (ch > 46) {
-        const t2 = document.createElementNS(SVGNS, 'text');
-        t2.setAttribute('x', x + 7); t2.setAttribute('y', y + 35);
-        t2.setAttribute('class', 'treemap-label sub');
-        t2.textContent = isPkg ? `${formatPct(n.percent)} · ${tmCountLeaves(n)} files` : formatPct(n.percent);
-        g.appendChild(t2);
+        const subText = isPkg ? `${formatPct(n.percent)} · ${tmCountLeaves(n)} files` : formatPct(n.percent);
+        const sub = tmTrunc(subText, cw - 14, 6.2);
+        if (sub) {
+          const t2 = document.createElementNS(SVGNS, 'text');
+          t2.setAttribute('x', x + 7); t2.setAttribute('y', y + 35);
+          t2.setAttribute('class', 'treemap-label sub');
+          t2.textContent = sub;
+          g.appendChild(t2);
+        }
       }
+
       // Packages always advertise that there's more to open inside.
       if (isPkg && cw > 34) g.appendChild(tmChevron(x + cw - 13, y + 8, 4));
     } else if (isPkg && cw > TM_GLYPH_MIN && ch > TM_GLYPH_MIN) {
@@ -695,16 +718,21 @@
     const shownCount = shown.reduce((s, r) => s + r.items.length, 0);
     let overflow = files.length - shownCount;
     if (overflow > 0) {
-      // Carve room for a "+N" chip in the last visible row.
-      const moreW = Math.min(FILE_CHIP_MAXW, Math.max(FILE_CHIP_MINW, 16 + ('' + overflow).length * CHIP_CHARW + CHIP_PADX * 2));
+      // Carve room for a "+N" chip in the last visible row. Size it for the
+      // worst-case digit count up front so it never grows (and spills) later,
+      // and never let it be wider than the row itself.
+      const digits = ('' + files.length).length;
+      const moreW = Math.min(w, Math.max(FILE_CHIP_MINW, 16 + digits * CHIP_CHARW + CHIP_PADX * 2));
       const last = shown[shown.length - 1];
-      while (last.items.length > 1 && last.w + FILE_CHIP_GAP + moreW > w) {
-        const it = last.items.pop();
-        last.w -= FILE_CHIP_GAP + it.w;
+      const rowW = items => items.reduce((s, it, i) => s + (i ? FILE_CHIP_GAP : 0) + it.w, 0);
+      // Drop trailing chips — down to an empty row if needed — until the "+N"
+      // marker fits. This guarantees the row never extends past `w`.
+      while (last.items.length && rowW(last.items) + FILE_CHIP_GAP + moreW > w) {
+        last.items.pop();
         overflow++;
       }
       last.items.push({ more: overflow, w: moreW });
-      last.w += FILE_CHIP_GAP + moreW;
+      last.w = rowW(last.items);
     }
 
     const usedH = shown.length * rowPitch - FILE_CHIP_GAP;
@@ -767,14 +795,20 @@
 
     const pad = tmPad(depth);
     const bx = x + pad, by = y + headerH, bw = cw - pad * 2, bh = ch - headerH - pad;
+    if (bw <= 2 || bh <= 2) return;
     const onMore = clickable ? () => drillInto(n.orig) : null;
+
+    // Everything inside the package is drawn into a group clipped to the body,
+    // so a child that ends up a hair too large is cropped rather than painting
+    // over a sibling package.
+    const body = tmClip(svg, bx, by, bw, bh);
 
     if (!dirs.length) {
       // Leaf package: just files, flowed as name-sized chips.
-      tmDrawFileFlow(svg, files, bx, by, bw, bh, onMore);
+      tmDrawFileFlow(body, files, bx, by, bw, bh, onMore);
     } else if (!files.length) {
       // Only sub-packages: squarify them across the whole body.
-      tmLayoutNodes(svg, dirs, bx, by, bw, bh, depth + 1);
+      tmLayoutNodes(body, dirs, bx, by, bw, bh, depth + 1);
     } else {
       // Both: sub-packages fill the body, files sit in a strip at the bottom.
       const rows = packChips(files, bw);
@@ -783,11 +817,11 @@
       stripH = Math.min(stripH, Math.max(0, bh * 0.5));
       const dirH = bh - stripH - FILE_CHIP_GAP;
       if (dirH >= TM_MIN_NEST_H * 0.5 && stripH >= FILE_CHIP_H) {
-        tmLayoutNodes(svg, dirs, bx, by, bw, dirH, depth + 1);
-        tmDrawFileFlow(svg, files, bx, by + dirH + FILE_CHIP_GAP, bw, stripH, onMore);
+        tmLayoutNodes(body, dirs, bx, by, bw, dirH, depth + 1);
+        tmDrawFileFlow(body, files, bx, by + dirH + FILE_CHIP_GAP, bw, stripH, onMore);
       } else {
         // Too cramped to split: give the whole body to the sub-packages.
-        tmLayoutNodes(svg, dirs, bx, by, bw, bh, depth + 1);
+        tmLayoutNodes(body, dirs, bx, by, bw, bh, depth + 1);
       }
     }
   }
@@ -836,18 +870,26 @@
       return;
     }
 
-    const width = container.clientWidth || 960;
-    const height = Math.max(440, Math.round(window.innerHeight * 0.74));
     const svg = document.createElementNS(SVGNS, 'svg');
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    container.appendChild(svg);
+
+    // Size the coordinate system to the SVG's *actual* pixel box so one user
+    // unit equals one screen pixel. Previously the viewBox height was guessed
+    // from window.innerHeight while CSS sized the element via a clamp(), and
+    // preserveAspectRatio:none stretched every cell (and its text) to bridge
+    // the gap — which is what pushed labels out of their rectangles. Matching
+    // the viewBox to the rendered size keeps geometry and truncation honest.
+    const box = svg.getBoundingClientRect();
+    const width = Math.max(320, Math.round(box.width || container.clientWidth || 960));
+    const height = Math.max(320, Math.round(box.height || 560));
     svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
-    svg.setAttribute('preserveAspectRatio', 'none');
 
     // The current root is the big enclosing frame; its sub-packages unfold
     // inside it, each holding their own sub-packages / file cells, as deep
     // as the available space allows.
+    tmClipSeq = 0;
     tmDrawContainer(svg, tmCollapse(filtered), 0, 0, width, height, 0);
-
-    container.appendChild(svg);
   }
 
   /* ---------- tree ---------- */
@@ -941,7 +983,11 @@
     pct.textContent = formatPct(node.percent);
     pct.style.color = pctColor(node.percent);
 
-    row.append(toggle, icon, name, spacer, count, barWrap, pct);
+    const meta = document.createElement('div');
+    meta.className = 'tree-meta';
+    meta.append(count, barWrap, pct);
+
+    row.append(toggle, icon, name, spacer, meta);
     return row;
   }
 
