@@ -111,7 +111,7 @@ func loadRuns(profiles []ProfileInput) ([]model.Run, error) {
 			return nil, fmt.Errorf("open profile %q: %w", p.Path, err)
 		}
 		prof, err := profile.Parse(f)
-		f.Close()
+		_ = f.Close()
 		if err != nil {
 			return nil, fmt.Errorf("parse profile %q: %w", p.Path, err)
 		}

@@ -14,7 +14,7 @@ make test
 
 Optional (matches CI / release tooling):
 
-- [golangci-lint](https://golangci-lint.run/welcome/install/) — `make lint-ci`
+- [golangci-lint](https://golangci-lint.run/welcome/install/) **v2.4.0+** — `make lint-ci` (required for Go 1.25)
 - [git-cliff](https://git-cliff.org/docs/installation/) — `make changelog`
 - [GoReleaser](https://goreleaser.com/) — local dry-run: `goreleaser release --snapshot --clean`
 

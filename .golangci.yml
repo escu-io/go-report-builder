@@ -1,8 +1,10 @@
+version: "2"
+
 run:
-  timeout: 5m
   tests: true
 
 linters:
+  default: none
   enable:
     - errcheck
     - govet
@@ -11,17 +13,30 @@ linters:
     - unused
     - misspell
     - unconvert
+  settings:
+    govet:
+      enable-all: true
+      disable:
+        - fieldalignment
+        - shadow
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+
+formatters:
+  enable:
     - gofmt
     - goimports
-
-linters-settings:
-  govet:
-    enable-all: true
-    disable:
-      - fieldalignment
-      - shadow
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 
 issues:
-  exclude-use-default: false
   max-issues-per-linter: 0
   max-same-issues: 0

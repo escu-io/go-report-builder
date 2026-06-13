@@ -59,10 +59,8 @@ func Files(opts Options) ([]string, error) {
 			importPath = modPath + "/" + strings.TrimSuffix(rel, ".go")
 		}
 		// Profile paths include .go suffix
-		profilePath := modPath
-		if rel != "." {
-			profilePath = modPath + "/" + rel
-		} else {
+		profilePath := modPath + "/" + rel
+		if rel == "." {
 			profilePath = modPath + "/" + filepath.Base(path)
 		}
 		files = append(files, profilePath)
@@ -78,7 +76,7 @@ func modulePathFromDir(dir string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("read go.mod: %w", err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	sc := bufio.NewScanner(f)
 	for sc.Scan() {
 		line := strings.TrimSpace(sc.Text())
@@ -94,7 +92,7 @@ func isGenerated(path string) bool {
 	if err != nil {
 		return false
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	sc := bufio.NewScanner(f)
 	for i := 0; i < 3 && sc.Scan(); i++ {
 		line := sc.Text()

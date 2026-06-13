@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Repository adoption assets: issue/PR templates, Dependabot, `SECURITY.md`, CI integration example, and `scripts/setup-github-repo.sh`.
 - CLI `-version` flag (set via GoReleaser ldflags on release builds).
 
+### Fixed
+
+- CI lint: upgrade to golangci-lint v2.4.0 (Go 1.25-compatible) and migrate config to v2 format.
+
 ## [0.1.2] - 2026-06-13
 
 ### Changed

@@ -131,6 +131,6 @@ func WriteFile(path string, report *model.Report) error {
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 	return HTML(f, report)
 }
