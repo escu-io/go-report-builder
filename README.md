@@ -58,18 +58,55 @@ go-report-builder -run-names "unit,integration" unit.out integration.out
 # Profile-exact scope (no module discovery)
 go-report-builder --profile-only cover.out
 
-# Override module root
-go-report-builder --root /path/to/module cover.out
+# Override module root and pass build tags
+go-report-builder --root /path/to/module --tags integration,e2e cover.out
 ```
 
-| Flag           | Default                 | Description                                                        |
-| -------------- | ----------------------- | ------------------------------------------------------------------ |
-| `-o`           | `coverage-report.html`  | Output HTML file path                                              |
-| `-root`        | auto-detect from go.mod | Module root directory                                              |
-| `-run-names`   | (filename)              | Comma-separated labels for profiles, in the same order as the args |
-| `-profile-only`| `false`                 | Only include files present in the profiles (disables discovery)    |
+| Flag           | Default                       | Description                                                        |
+| -------------- | ----------------------------- | ------------------------------------------------------------------ |
+| `-config`      | `.go-coverage-report.yaml`    | Path to the YAML config file (optional)                            |
+| `-o`           | `coverage-report.html`        | Output HTML file path                                              |
+| `-root`        | auto-detect from go.mod       | Module root directory                                              |
+| `-tags`        | (none)                        | Comma-separated build tags honored during discovery               |
+| `-run-names`   | (filename)                    | Comma-separated labels for profiles, in the same order as the args |
+| `-profile-only`| `false`                       | Only include files present in the profiles (disables discovery)    |
 
 Open the generated HTML file in any browser.
+
+## Config file
+
+Instead of passing flags every time, drop a `.go-coverage-report.yaml` file in your
+working directory (or point at one with `-config`). Everything you can set in the file
+is also available as a flag, and vice versa.
+
+```yaml
+# .go-coverage-report.yaml
+output: coverage-report.html   # -o
+root: ""                       # -root (empty = auto-detect from go.mod)
+profileOnly: false             # -profile-only
+buildTags:                     # -tags
+  - integration
+profiles:                      # positional args + -run-names
+  - path: unit.out
+    label: unit
+  - path: integration.out
+    label: integration
+```
+
+Each `profiles` entry may be written in full (`path:` + optional `label:`) or as a bare
+string when you don't need a label:
+
+```yaml
+profiles:
+  - unit.out
+  - integration.out
+```
+
+**Precedence:** the config file provides the defaults; any flag you pass on the command
+line overrides the matching config value. Passing positional profile arguments replaces
+the file's `profiles` list entirely (with `-run-names` supplying their labels). When you
+pass `-config` explicitly, a missing file is an error; the default path is silently
+ignored when absent.
 
 ## Library usage
 

@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   file detail, per-run filter, and dark/light theme toggle.
 - Whole-module discovery: untested files are reported as 0% covered by default,
   with a `--profile-only` opt-out.
+- Optional `.go-coverage-report.yaml` config file (`-config` flag) mirroring every
+  CLI option; `profiles` accept a bare path string or a `{path, label}` mapping.
+- `-tags` flag to pass build tags honored during discovery (config: `buildTags`).
 - MIT license, contribution guide, Makefile, and CI workflow.
 
 [Unreleased]: https://github.com/escu-io/go-report-builder/commits/main
