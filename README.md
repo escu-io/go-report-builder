@@ -17,6 +17,13 @@ The generated report bundles its own CSS and JavaScript into a single HTML file 
 open it directly in a browser or publish it as a static CI artifact with zero runtime
 dependencies.
 
+## Preview
+
+<table>
+    <td><img src="docs/screenshots/coverage-treemap.png" alt="Coverage treemap" width="480"></td>
+    <td><img src="docs/screenshots/coverage-file-detail.png" alt="Line-level coverage in source" width="480"></td>
+</table>
+
 ## Features
 
 - **Treemap** — zoomable map sized by statements, colored by coverage %

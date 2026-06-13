@@ -2,6 +2,9 @@
 *.out
 /coverage-report.html
 
+# Local demo clones (third-party repos + generated reports)
+/demo/
+
 # Built CLI binary
 /go-report-builder
 
